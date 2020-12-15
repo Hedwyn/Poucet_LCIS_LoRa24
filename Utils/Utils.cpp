@@ -84,13 +84,14 @@ const char states[][SERIAL_LINE_MAX_LENGTH] =
     "Ranging Done",
     "Ranging Timeout",
     "Ranging Config",
+    "Ranging Request",
     "Ranging",
     "Sending Ping",
     "Sending Pong",
-    "Reception",
+    "Message received",
     "Reception timeout",
     "Reception error",
-    "Transmission",
+    "Starting reception",
     "Tranmission timeout",
     "PER Transmission start"
     "Per Reception start"
@@ -144,7 +145,7 @@ double p[8] = { 0,
 #define RX_TIMEOUT_TICK_SIZE            RADIO_TICK_SIZE_1000_US
 
 #define RNG_TIMER_MS                    384 // ms
-#define RNG_COM_TIMEOUT                 400 // ms
+#define RNG_COM_TIMEOUT                 1000 // ms
 
 /*!
  * \brief Maximum length in bytes of a master or slave ID
@@ -178,6 +179,9 @@ double RssiRng[DEMO_RNG_CHANNELS_COUNT_MAX];
 /** flags **/
 enum RXTX_flag {NOTHING_PENDING, TX_DONE, RX_DONE, RX_FAILED, TX_TIMEOUT, RX_TIMEOUT };
 RXTX_flag rxTxEvent = NOTHING_PENDING;
+
+enum Ranging_flag {NO_RANGING, RANGING_COMPLETED, RANGING_FAILED, RANGING_TIMEOUT};
+Ranging_flag ranging_flag = NO_RANGING;
 
 
 /*!
@@ -311,6 +315,553 @@ void SendNextPacketEvent( void );
 void ReceiveNextPacketEvent( void );
 uint8_t CheckDistance( void );
 
+void configure_ranging() {
+    memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
+    memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
+    memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
+    memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
+    memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
+    memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
+    memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
+}
+
+int masterFSM() {
+    static time_t endwait;
+    static time_t start;
+    static int ranging_counter = 0;
+    if (previous_state != (char *) &states[DemoInternalState]) {
+        debug_print("State:%s\r\n", states[DemoInternalState]);
+    }
+    previous_state = (char *) &states[DemoInternalState];
+    Radio.ProcessIrqs();
+    switch( DemoInternalState )
+    {
+        case APP_RANGING_CONFIG:
+            debug_print("MASTER : Setting APP_RANGING_CONFIG\n\r");
+            debug_print("Req delay:%d\n\r",Eeprom.EepromData.DemoSettings.RngReqDelay);
+            configure_ranging();
+            DemoInternalState = APP_RANGING_REQUEST;
+            break;
+
+        case APP_RANGING_REQUEST:
+            timer_print("{Timer:%ld\r\n", HAL_GetTick());
+            verbose_print("{Counter}:%d\r\n", ranging_counter++);
+            debug_print("setting start end endwait\r\n");
+            /* setting watchdog timer */
+            start = time(NULL);
+            endwait = start + rx_timeout;
+            ModulationParams.PacketType = PACKET_TYPE_LORA;
+            PacketParams.PacketType     = PACKET_TYPE_LORA;
+            PacketParams.Params.LoRa.PayloadLength = 7;
+
+            Radio.SetPacketType( ModulationParams.PacketType );
+            Radio.SetModulationParams( &ModulationParams );
+            Radio.SetPacketParams( &PacketParams );
+            Radio.SetRfFrequency( Eeprom.EepromData.DemoSettings.Frequency );
+
+            Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
+            Eeprom.EepromData.DemoSettings.CntPacketTx++;
+            Eeprom.EepromData.DemoSettings.CntPacketRxOK = 0;
+            Eeprom.EepromData.DemoSettings.CntPacketRxOKSlave = 0;
+
+            MeasuredChannels  = 0;
+            CurrentChannel    = 0;
+            Buffer[0] = ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF;
+            Buffer[1] = ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF;
+            Buffer[2] = ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF;
+            Buffer[3] = ( Eeprom.EepromData.DemoSettings.RngAddress & 0xFF );
+            Buffer[4] = CurrentChannel;    // set the first channel to use
+            Buffer[5] = Eeprom.EepromData.DemoSettings.RngAntenna;      // set the antenna strategy
+            Buffer[6] = Eeprom.EepromData.DemoSettings.RngRequestCount; // set the number of hops);
+            TX_LED = 1;
+            Radio.SendPayload( Buffer, PacketParams.Params.LoRa.PayloadLength, ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, RNG_COM_TIMEOUT } );
+
+            /* starting timeout timer */
+            start = time(NULL);
+            endwait = start + rx_timeout;
+            DemoInternalState = APP_IDLE;
+            break;
+
+        case APP_RNG:
+            if( SendNext == true )
+            {
+                Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
+                if( (BufferSize > 0 ) && \
+                        ( Buffer[0] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF ) ) && \
+                        ( Buffer[1] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF ) ) && \
+                        ( Buffer[2] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF ) ) && \
+                        ( Buffer[3] == (   Eeprom.EepromData.DemoSettings.RngAddress         & 0xFF ) ) )
+                {
+
+                    SendNext = false;
+                    MeasuredChannels++;
+                    if( MeasuredChannels <= Eeprom.EepromData.DemoSettings.RngRequestCount )
+                    {
+                        Radio.SetRfFrequency( Channels[CurrentChannel] );
+                        TX_LED = 1;
+                        switch( Eeprom.EepromData.DemoSettings.RngAntenna )
+                        {
+                            case DEMO_RNG_ANT_1:
+                                Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
+                                CurrentChannel++;
+                                if( CurrentChannel >= CHANNELS )
+                                {
+                                    CurrentChannel -= CHANNELS;
+                                }
+                                break;
+
+                            case DEMO_RNG_ANT_0:
+                                Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
+                                CurrentChannel++;
+                                if( CurrentChannel >= CHANNELS )
+                                {
+                                    CurrentChannel -= CHANNELS;
+                                }
+                                break;
+
+                            case DEMO_RNG_ANT_BOTH:
+                                if( ANT_SW == 1 )
+                                {
+                                    Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
+                                }
+                                else
+                                {
+                                    Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
+                                    CurrentChannel++;
+                                    if( CurrentChannel >= CHANNELS )
+                                    {
+                                        CurrentChannel -= CHANNELS;
+                                    }
+                                }
+                                break;
+                        }
+                        SetAntennaSwitch( );
+                        DemoInternalState = APP_IDLE;
+                        Radio.SetTx( ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, 0xFFFF } );
+                    }
+                    else
+                    {
+                        Eeprom.EepromData.DemoSettings.CntPacketRxOKSlave = CheckDistance( );
+                        SendNextPacket.detach( );
+                        SendNext = false;
+                        DemoInternalState = APP_RANGING_CONFIG;
+                        Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
+                        debug_print("Ranging Completed, CntPacketRxOK = %s\r\n",GetMenuDemoRxOk());
+                        // return 0;
+                        DemoInternalState = APP_RANGING_REQUEST;
+                    }
+                }
+            }
+            break;
+
+        case APP_RANGING_DONE:
+            TX_LED = 0;
+            RawRngResults[RngResultIndex] = Radio.GetRangingResult( RANGING_RESULT_RAW );
+            RawRngResults[RngResultIndex] += Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
+                ModulationParams.Params.LoRa.SpreadingFactor,
+                ModulationParams.Params.LoRa.Bandwidth,
+                Radio.GetRangingPowerDeltaThresholdIndicator( )
+            );
+            RngResultIndex++;
+            Eeprom.EepromData.DemoSettings.CntPacketRxOK++;
+            DemoInternalState = APP_RNG;
+            debug_print("Ranging Response Received\r\n");
+            break;
+
+        case APP_RANGING_TIMEOUT:
+            TX_LED = 0;
+            DemoInternalState = APP_RNG;
+            break;
+
+        case APP_MSG_RECEIVED:
+            RX_LED = 0;
+            if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
+            {
+                debug_print("Receiving data\r\n");
+                Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
+                if ((BufferSize > 0) &&
+                    (Buffer[0] == ((Eeprom.EepromData.DemoSettings.RngAddress >> 24) & 0xFF)) &&
+                    (Buffer[1] == ((Eeprom.EepromData.DemoSettings.RngAddress >> 16) & 0xFF)) &&
+                    (Buffer[2] == ((Eeprom.EepromData.DemoSettings.RngAddress >> 8) & 0xFF)) &&
+                    (Buffer[3] == (Eeprom.EepromData.DemoSettings.RngAddress & 0xFF)))
+                {
+                    debug_print("Start Ranging Process\r\n");
+                    Eeprom.EepromData.DemoSettings.RxTimeOutCount = 0;
+                    Eeprom.EepromData.DemoSettings.RngStatus = RNG_PROCESS;
+                    Eeprom.EepromData.DemoSettings.RngFei = ( double )( ( ( int32_t )Buffer[4] << 24 ) | \
+                                                                        ( ( int32_t )Buffer[5] << 16 ) | \
+                                                                        ( ( int32_t )Buffer[6] <<  8 ) | \
+                                                                                        Buffer[7] );
+                    Eeprom.EepromData.DemoSettings.RssiValue = Buffer[8]; // for ranging post-traitment (since V3 only)
+                    ModulationParams.PacketType = PACKET_TYPE_RANGING;
+                    PacketParams.PacketType     = PACKET_TYPE_RANGING;
+
+                    memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
+                    memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
+                    memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
+                    memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
+                    memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
+                    PacketParams.Params.LoRa.PayloadLength = 10;
+                    memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
+                    memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
+
+                    Radio.SetPacketType( ModulationParams.PacketType );
+                    Radio.SetModulationParams( &ModulationParams );
+                    Radio.SetPacketParams( &PacketParams );
+                    Radio.SetRangingRequestAddress( Eeprom.EepromData.DemoSettings.RngAddress );
+                    Radio.SetRangingCalibration( Eeprom.EepromData.DemoSettings.RngCalib );
+                    Radio.SetTxParams( Eeprom.EepromData.DemoSettings.TxPower, RADIO_RAMP_20_US );
+
+                    MeasuredChannels = 0;
+                    RngResultIndex   = 0;
+                    SendNextPacket.attach_us( &SendNextPacketEvent, Eeprom.EepromData.DemoSettings.RngReqDelay * 1000 );
+                    DemoInternalState = APP_RNG;
+                }
+                else
+                {
+                    debug_print("RX failed\r\n");
+                    DemoInternalState = APP_RANGING_CONFIG;
+                }
+            }
+            else
+            {
+                debug_print("RX failed\r\n");
+                DemoInternalState = APP_RANGING_CONFIG;
+            }
+            break;
+
+        case APP_ENABLE_RX:
+            TX_LED = 0;
+            if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
+            {
+                RX_LED = 1;
+                Radio.SetRx( ( TickTime_t ) { RX_TIMEOUT_TICK_SIZE, RNG_COM_TIMEOUT } );
+                DemoInternalState = APP_IDLE;
+            }
+            else
+            {
+                DemoInternalState = APP_RANGING_CONFIG;
+            }
+            break;
+
+        case APP_RX_TIMEOUT:
+            RX_LED = 0;
+            Eeprom.EepromData.DemoSettings.RngStatus = RNG_TIMEOUT;
+            break;
+
+        case APP_RX_ERROR:
+            RX_LED = 0;
+            debug_print("RX error\r\n");
+            DemoInternalState = APP_RANGING_REQUEST;
+            break;
+
+        case APP_TX_TIMEOUT:
+            TX_LED = 0;
+            DemoInternalState = APP_RANGING_REQUEST;
+            break;
+
+        case APP_IDLE: // do nothing           
+            start = time(NULL);
+            if (start > endwait){
+                verbose_print("Timeout on reception\r\n");
+                endwait = start + rx_timeout;
+                StopDemoApplication();
+                Eeprom.EepromData.DemoSettings.HoldDemo = true;
+                // DemoInternalState = APP_RANGING_CONFIG;
+            }
+            switch (rxTxEvent)
+            {
+            case RX_DONE:
+                DemoInternalState = APP_MSG_RECEIVED;
+                break;
+            case RX_FAILED:
+                DemoInternalState = APP_RX_ERROR;
+                break;
+            case TX_DONE:
+                DemoInternalState = APP_ENABLE_RX;
+                break;
+            case RX_TIMEOUT:
+                DemoInternalState = APP_RX_TIMEOUT;
+                break;
+            case TX_TIMEOUT:
+                DemoInternalState = APP_TX_TIMEOUT;
+                break;
+            case NOTHING_PENDING:
+                DemoInternalState = APP_IDLE;
+                break;
+            }
+            /* clearing event flag */
+            rxTxEvent = NOTHING_PENDING;
+            
+            switch (ranging_flag)
+            {
+            case RANGING_COMPLETED:
+                DemoInternalState = APP_RANGING_DONE;
+                break;
+            case RANGING_FAILED:
+            case RANGING_TIMEOUT:
+                DemoInternalState = APP_RANGING_TIMEOUT;
+                break;                   
+            }
+            ranging_flag = NO_RANGING;
+        
+            break;
+
+        default:
+    //					DemoRunning = false;
+            DemoInternalState = APP_RANGING_CONFIG;
+            Eeprom.EepromData.DemoSettings.HoldDemo = true;
+            break;
+    }
+    return 0;
+}
+
+int slaveFSM() {
+    if (previous_state != (char *) &states[DemoInternalState]) {
+        debug_print("State:%s\r\n", states[DemoInternalState]);
+    }
+    previous_state = (char *) &states[DemoInternalState];
+    Radio.ProcessIrqs();
+    switch( DemoInternalState )
+    {
+        case APP_RANGING_CONFIG:
+            debug_print("SLAVE : Setting APP_RANGING_CONFIG\n\r");
+            Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
+            ModulationParams.PacketType = PACKET_TYPE_LORA;
+            PacketParams.PacketType     = PACKET_TYPE_LORA;  
+            PacketParams.Params.LoRa.PayloadLength = 9;
+            configure_ranging();
+            Radio.SetPacketType( ModulationParams.PacketType );
+            Radio.SetModulationParams( &ModulationParams );
+            Radio.SetPacketParams( &PacketParams );
+            Radio.SetRfFrequency( Eeprom.EepromData.DemoSettings.Frequency );
+            RX_LED = 1;
+            // use listen mode here instead of rx continuous
+            Radio.SetRx( ( TickTime_t ) { RX_TIMEOUT_TICK_SIZE, 0xFFFF } );
+            DemoInternalState = APP_IDLE;
+            break;
+
+        case APP_RNG:
+            if( SendNext == true )
+            {
+                SendNext = false;
+                MeasuredChannels++;
+                if( MeasuredChannels <= Eeprom.EepromData.DemoSettings.RngRequestCount )
+                {
+                    Radio.SetRfFrequency( Channels[CurrentChannel] );
+                    RX_LED = 1;
+                    switch( Eeprom.EepromData.DemoSettings.RngAntenna )
+                    {
+                        case DEMO_RNG_ANT_1:
+                            Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
+                            CurrentChannel++;
+                            if( CurrentChannel >= CHANNELS )
+                            {
+                                CurrentChannel -= CHANNELS;
+                            }
+                            break;
+
+                        case DEMO_RNG_ANT_0:
+                            Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
+                            CurrentChannel++;
+                            if( CurrentChannel >= CHANNELS )
+                            {
+                                CurrentChannel -= CHANNELS;
+                            }
+                            break;
+
+                        case DEMO_RNG_ANT_BOTH:
+                            if( ANT_SW == 1 )
+                            {
+                                Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
+                            }
+                            else
+                            {
+                                Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
+                                CurrentChannel++;
+                                if( CurrentChannel >= CHANNELS )
+                                {
+                                    CurrentChannel -= CHANNELS;
+                                }
+                            }
+                            break;
+                    }
+                    SetAntennaSwitch();
+                    DemoInternalState = APP_IDLE;
+                    Radio.SetRx( ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, Eeprom.EepromData.DemoSettings.RngReqDelay } );
+                }
+                else
+                {
+                    Radio.SetStandby( STDBY_RC );
+                    SendNextPacket.detach( );
+                    Eeprom.EepromData.DemoSettings.RngStatus = RNG_VALID;
+                    DemoInternalState = APP_RANGING_CONFIG;
+                    ranging_flag = NO_RANGING; 
+                    debug_print("Ranging Completed, waiting for the next request, CntPacketRxOK = %s, CntPacketRxKOSlave = %s\r\n",GetMenuDemoRxOk(),GetMenuDemoRxKoSlave());
+                }
+            }
+            break;
+
+        case APP_RANGING_DONE:
+            RX_LED = 0;
+            Eeprom.EepromData.DemoSettings.CntPacketRxOK++;
+            DemoInternalState = APP_RNG;
+            debug_print("Ranging Request Received (reponse by the chip ?)\r\n");
+            break;
+
+        case APP_RANGING_TIMEOUT:
+            RX_LED = 0;
+            DemoInternalState = APP_RNG;
+            break;
+
+        case APP_MSG_RECEIVED:
+            RX_LED = 0;
+            if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
+            {
+                Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
+                Radio.GetPacketStatus( &PacketStatus );
+                if( ( BufferSize > 0 ) && \
+                    ( Buffer[0] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF ) ) && \
+                    ( Buffer[1] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF ) ) && \
+                    ( Buffer[2] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF ) ) && \
+                    ( Buffer[3] == (   Eeprom.EepromData.DemoSettings.RngAddress         & 0xFF ) ) )
+                {
+                    Eeprom.EepromData.DemoSettings.RngFei    = Radio.GetFrequencyError( );
+                    Eeprom.EepromData.DemoSettings.RssiValue = PacketStatus.LoRa.RssiPkt;
+                    Eeprom.EepromData.DemoSettings.CntPacketTx++;
+                    CurrentChannel                                 = Buffer[4];
+                    Eeprom.EepromData.DemoSettings.RngAntenna      = Buffer[5];
+                    Eeprom.EepromData.DemoSettings.RngRequestCount = Buffer[6];
+                    wait_us( 10 );
+                    Buffer[4] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) >> 24 ) & 0xFF ;
+                    Buffer[5] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) >> 16 ) & 0xFF ;
+                    Buffer[6] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) >>  8 ) & 0xFF ;
+                    Buffer[7] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) & 0xFF );
+                    Buffer[8] = Eeprom.EepromData.DemoSettings.RssiValue;
+                    TX_LED = 1;
+                    Radio.SendPayload( Buffer, 9, ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, RNG_COM_TIMEOUT } );
+                    DemoInternalState = APP_IDLE;
+                }
+                else
+                {
+                    DemoInternalState = APP_RANGING_CONFIG;
+                }
+            }
+            else
+            {
+                DemoInternalState = APP_RANGING_CONFIG;
+            }
+            break;
+
+        case APP_ENABLE_RX:
+            TX_LED = 0;
+            if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
+            {
+                debug_print("Start Ranging Process\r\n");
+                Eeprom.EepromData.DemoSettings.RngStatus = RNG_PROCESS;
+
+                ModulationParams.PacketType = PACKET_TYPE_RANGING;
+                PacketParams.PacketType     = PACKET_TYPE_RANGING;
+
+                memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
+                memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
+                memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
+                memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
+                memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
+                PacketParams.Params.LoRa.PayloadLength = 10;
+                memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
+                memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
+
+                Radio.SetPacketType( ModulationParams.PacketType );
+
+                Radio.SetModulationParams( &ModulationParams );
+                Radio.SetPacketParams( &PacketParams );
+                Radio.SetDeviceRangingAddress( Eeprom.EepromData.DemoSettings.RngAddress );
+                Radio.SetRangingCalibration( Eeprom.EepromData.DemoSettings.RngCalib );
+                Radio.SetTxParams( Eeprom.EepromData.DemoSettings.TxPower, RADIO_RAMP_20_US );
+                Eeprom.EepromData.DemoSettings.CntPacketRxOK = 0;
+                MeasuredChannels = 0;
+                Eeprom.EepromData.DemoSettings.CntPacketRxKOSlave = 0;
+                SendNextPacket.attach_us( &SendNextPacketEvent, Eeprom.EepromData.DemoSettings.RngReqDelay * 1000 );
+                DemoInternalState = APP_RNG;
+            }
+            else
+            {
+                DemoInternalState = APP_RANGING_CONFIG;
+            }
+            break;
+
+        case APP_RX_TIMEOUT:
+            RX_LED = 0;
+            DemoInternalState = APP_RANGING_CONFIG;
+            break;
+
+        case APP_RX_ERROR:
+            RX_LED = 0;
+            DemoInternalState = APP_RANGING_CONFIG;
+            break;
+
+        case APP_TX_TIMEOUT:
+            TX_LED = 0;
+            DemoInternalState = APP_RANGING_CONFIG;
+            break;
+
+        case APP_IDLE: // do nothing
+            if( Eeprom.EepromData.DemoSettings.CntPacketRxKOSlave > DEMO_RNG_CHANNELS_COUNT_MAX )
+            {
+                Eeprom.EepromData.DemoSettings.CntPacketRxKOSlave = 0;
+                RX_LED = 0;
+                DemoInternalState = APP_RANGING_CONFIG;
+                SendNextPacket.detach( );
+            }
+
+            /* handling RX-TX events */
+            switch (rxTxEvent)
+            {
+            case RX_DONE:
+                DemoInternalState = APP_MSG_RECEIVED;
+                break;
+            case RX_FAILED:
+                DemoInternalState = APP_RX_ERROR;
+                break;
+            case TX_DONE:
+                DemoInternalState = APP_ENABLE_RX;
+                break;
+            case RX_TIMEOUT:
+                DemoInternalState = APP_RX_TIMEOUT;
+                break;
+            case TX_TIMEOUT:
+                DemoInternalState = APP_TX_TIMEOUT;
+                break;
+            case NOTHING_PENDING:
+                DemoInternalState = APP_IDLE;
+                break;
+            }
+            /* clearing event flag */
+            rxTxEvent = NOTHING_PENDING;
+
+            // /* handling ranging events */
+            switch (ranging_flag)
+            {
+            case RANGING_COMPLETED:
+                DemoInternalState = APP_RANGING_DONE;
+                break;
+            case RANGING_FAILED:
+            case RANGING_TIMEOUT:
+                DemoInternalState = APP_RANGING_TIMEOUT;
+                break;                   
+            }
+            ranging_flag = NO_RANGING;
+            break;
+
+        default:
+            DemoInternalState = APP_RANGING_CONFIG;
+            SendNextPacket.detach();
+            break;
+    }
+    return 0;
+}
+
 
 // ************************      Ranging Demo      *****************************
 // *                                                                           *
@@ -319,595 +870,42 @@ uint8_t CheckDistance( void );
 // *****************************************************************************
 uint8_t RunDemoApplicationRanging( void )
 {
-    uint8_t refreshDisplay = 0;
     Eeprom.EepromData.DemoSettings.HoldDemo = false;
-    DemoRunning = false;
-    time_t endwait;
-    time_t start;
-    int IDLElock;
-    Ticker test;
-//    endwait = start + seconds;
-//    printf("beginning the app\r\n");
-    while(1)
-//	while (start < endwait)
+    TX_LED = 0;
+    RX_LED = 0;
+    ANT_SW = 1;
+    Eeprom.EepromData.DemoSettings.CntPacketTx = 0;
+    Eeprom.EepromData.DemoSettings.RngFei = 0.0;
+    Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
+    InitializeDemoParameters( Eeprom.EepromData.DemoSettings.ModulationType );
+    if( Eeprom.EepromData.DemoSettings.Entity == MASTER )
     {
-
-		// if( Eeprom.EepromData.DemoSettings.HoldDemo == true )
-		// {
-		// 	return 0;   // quit without refresh display
-		// }
-
-		if( DemoRunning == false )
-		{
-            IDLElock = 0;
-			debug_print("setting the SX1280\r\n");
-			DemoRunning = true;
-            TX_LED = 0;
-            RX_LED = 0;
-            ANT_SW = 1;
-
-            Eeprom.EepromData.DemoSettings.CntPacketTx = 0;
-            Eeprom.EepromData.DemoSettings.RngFei = 0.0;
-            Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
-            InitializeDemoParameters( Eeprom.EepromData.DemoSettings.ModulationType );
-			if( Eeprom.EepromData.DemoSettings.Entity == MASTER )
-			{
-				Eeprom.EepromData.DemoSettings.TimeOnAir = RX_TX_INTER_PACKET_DELAY;
-				Radio.SetDioIrqParams( IRQ_RX_DONE | IRQ_TX_DONE | IRQ_RX_TX_TIMEOUT | IRQ_RANGING_MASTER_RESULT_VALID | IRQ_RANGING_MASTER_TIMEOUT,
-									   IRQ_RX_DONE | IRQ_TX_DONE | IRQ_RX_TX_TIMEOUT | IRQ_RANGING_MASTER_RESULT_VALID | IRQ_RANGING_MASTER_TIMEOUT,
-									   IRQ_RADIO_NONE, IRQ_RADIO_NONE );
-				Eeprom.EepromData.DemoSettings.RngDistance = 0.0;
-				DemoInternalState = APP_RANGING_CONFIG;
-			}
-			else
-			{
-				Radio.SetDioIrqParams( IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE );
-				DemoInternalState = APP_RANGING_CONFIG;
-			}
-		}
-
-		Radio.ProcessIrqs( );
-//		printf("DemoInternalState : %u, Operating Mode : %u, Entity : %u\n\r",DemoInternalState,Radio.GetOpMode( ),Eeprom.EepromData.DemoSettings.Entity);
-		if( Eeprom.EepromData.DemoSettings.Entity == MASTER )
-		{
-            if (previous_state != (char *) &states[DemoInternalState]) {
-                verbose_print("State:%s\r\n", states[DemoInternalState]);
-            }
-            previous_state = (char *) &states[DemoInternalState];
-			switch( DemoInternalState )
-			{
-				case APP_RANGING_CONFIG:
-					debug_print("MASTER : Setting APP_RANGING_CONFIG\n\r");
-                    debug_print("Req delay:%d\n\r",Eeprom.EepromData.DemoSettings.RngReqDelay);
-					Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
-					Eeprom.EepromData.DemoSettings.CntPacketTx++;
-					ModulationParams.PacketType = PACKET_TYPE_LORA;
-					PacketParams.PacketType     = PACKET_TYPE_LORA;
-					memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
-					memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
-					memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
-					memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
-					memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
-					PacketParams.Params.LoRa.PayloadLength = 7;
-					memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
-					memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
-					Radio.SetPacketType( ModulationParams.PacketType );
-					Radio.SetModulationParams( &ModulationParams );
-					Radio.SetPacketParams( &PacketParams );
-					Radio.SetRfFrequency( Eeprom.EepromData.DemoSettings.Frequency );
-					Eeprom.EepromData.DemoSettings.CntPacketRxOK = 0;
-					Eeprom.EepromData.DemoSettings.CntPacketRxOKSlave = 0;
-					MeasuredChannels  = 0;
-					CurrentChannel    = 0;
-					Buffer[0] = ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF;
-					Buffer[1] = ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF;
-					Buffer[2] = ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF;
-					Buffer[3] = ( Eeprom.EepromData.DemoSettings.RngAddress & 0xFF );
-					Buffer[4] = CurrentChannel;    // set the first channel to use
-					Buffer[5] = Eeprom.EepromData.DemoSettings.RngAntenna;      // set the antenna strategy
-					Buffer[6] = Eeprom.EepromData.DemoSettings.RngRequestCount; // set the number of hops
-					TX_LED = 1;
-//						printf("Eeprom.EepromData.DemoSettings.RngAddress : %lu \n\r",Eeprom.EepromData.DemoSettings.RngAddress);
-//						printf("Eeprom.EepromData.DemoSettings.RngAntenna : %u \n\r",Eeprom.EepromData.DemoSettings.RngAntenna);
-//						printf("Buffer[0] : %lu\n\r",( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF);
-//						printf("Buffer[1] : %lu\n\r",( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF);
-//						printf("Buffer[2] : %lu\n\r",( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF);
-//						printf("Buffer[3] : %lu\n\r",( Eeprom.EepromData.DemoSettings.RngAddress & 0xFF ));
-					Radio.SendPayload( Buffer, PacketParams.Params.LoRa.PayloadLength, ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, RNG_COM_TIMEOUT } );
-					DemoInternalState = APP_IDLE;
-//						printf("Payload sent\n\r");
-					break;
-
-				case APP_RNG:
-					if( SendNext == true )
-					{
-						Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
-						if( (BufferSize > 0 ) && \
-								( Buffer[0] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF ) ) && \
-								( Buffer[1] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF ) ) && \
-								( Buffer[2] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF ) ) && \
-								( Buffer[3] == (   Eeprom.EepromData.DemoSettings.RngAddress         & 0xFF ) ) )
-						{
-
-							SendNext = false;
-							MeasuredChannels++;
-							if( MeasuredChannels <= Eeprom.EepromData.DemoSettings.RngRequestCount )
-							{
-								Radio.SetRfFrequency( Channels[CurrentChannel] );
-								TX_LED = 1;
-								switch( Eeprom.EepromData.DemoSettings.RngAntenna )
-								{
-									case DEMO_RNG_ANT_1:
-										//ANT_SW = 1; // ANT1
-										Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
-										CurrentChannel++;
-										if( CurrentChannel >= CHANNELS )
-										{
-											CurrentChannel -= CHANNELS;
-										}
-										break;
-
-									case DEMO_RNG_ANT_0:
-										//ANT_SW = 0; // ANT0
-										Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
-										CurrentChannel++;
-										if( CurrentChannel >= CHANNELS )
-										{
-											CurrentChannel -= CHANNELS;
-										}
-										break;
-
-									case DEMO_RNG_ANT_BOTH:
-										if( ANT_SW == 1 )
-										{
-											//ANT_SW = 0;
-											Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
-										}
-										else
-										{
-											//ANT_SW = 1;
-											Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
-											CurrentChannel++;
-											if( CurrentChannel >= CHANNELS )
-											{
-												CurrentChannel -= CHANNELS;
-											}
-										}
-										break;
-								}
-								SetAntennaSwitch( );
-								DemoInternalState = APP_IDLE;
-								Radio.SetTx( ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, 0xFFFF } );
-								debug_print("Ranging Request sent\r\n");
-							}
-							else
-							{
-								Eeprom.EepromData.DemoSettings.CntPacketRxOKSlave = CheckDistance( );
-								refreshDisplay = 1;
-								SendNextPacket.detach( );
-								// Eeprom.EepromData.DemoSettings.HoldDemo = true;
-								SendNext = false;
-								DemoInternalState = APP_RANGING_CONFIG;
-								Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
-								debug_print("Ranging Completed, CntPacketRxOK = %s\r\n",GetMenuDemoRxOk());
-								return 0;
-                                // DemoInternalState = APP_RANGING_CONFIG;
-							}
-						}
-					}
-					break;
-
-				case APP_RANGING_DONE:
-					TX_LED = 0;
-//					MODE1 = 0;
-					RawRngResults[RngResultIndex] = Radio.GetRangingResult( RANGING_RESULT_RAW );
-					RawRngResults[RngResultIndex] += Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
-						ModulationParams.Params.LoRa.SpreadingFactor,
-						ModulationParams.Params.LoRa.Bandwidth,
-						Radio.GetRangingPowerDeltaThresholdIndicator( )
-					);
-					RngResultIndex++;
-					Eeprom.EepromData.DemoSettings.CntPacketRxOK++;
-					DemoInternalState = APP_RNG;
-					debug_print("Ranging Response Received\r\n");
-					break;
-
-				case APP_RANGING_TIMEOUT:
-					TX_LED = 0;
-					DemoInternalState = APP_RNG;
-					break;
-
-				case APP_RX:
-					RX_LED = 0;
-					if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
-					{
-						debug_print("Receiving data\r\n");
-						Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
-						if( (BufferSize > 0 ) && \
-								( Buffer[0] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF ) ) && \
-								( Buffer[1] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF ) ) && \
-								( Buffer[2] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF ) ) && \
-								( Buffer[3] == (   Eeprom.EepromData.DemoSettings.RngAddress         & 0xFF ) ) )
-						{
-							debug_print("Start Ranging Process\r\n");
-							Eeprom.EepromData.DemoSettings.RxTimeOutCount = 0;
-							Eeprom.EepromData.DemoSettings.RngStatus = RNG_PROCESS;
-//							MODE1 = 1;
-							Eeprom.EepromData.DemoSettings.RngFei = ( double )( ( ( int32_t )Buffer[4] << 24 ) | \
-																				( ( int32_t )Buffer[5] << 16 ) | \
-																				( ( int32_t )Buffer[6] <<  8 ) | \
-																							 Buffer[7] );
-							Eeprom.EepromData.DemoSettings.RssiValue = Buffer[8]; // for ranging post-traitment (since V3 only)
-							ModulationParams.PacketType = PACKET_TYPE_RANGING;
-							PacketParams.PacketType     = PACKET_TYPE_RANGING;
-
-							memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
-							memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
-							memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
-							memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
-							memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
-							PacketParams.Params.LoRa.PayloadLength = 10;
-							memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
-							memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
-
-							Radio.SetPacketType( ModulationParams.PacketType );
-							Radio.SetModulationParams( &ModulationParams );
-							Radio.SetPacketParams( &PacketParams );
-							Radio.SetRangingRequestAddress( Eeprom.EepromData.DemoSettings.RngAddress );
-							Radio.SetRangingCalibration( Eeprom.EepromData.DemoSettings.RngCalib );
-							Radio.SetTxParams( Eeprom.EepromData.DemoSettings.TxPower, RADIO_RAMP_20_US );
-
-							MeasuredChannels = 0;
-							RngResultIndex   = 0;
-							SendNextPacket.attach_us( &SendNextPacketEvent, Eeprom.EepromData.DemoSettings.RngReqDelay * 1000 );
-							DemoInternalState = APP_RNG;
-						}
-						else
-						{
-							debug_print("RX failed\r\n");
-							DemoRunning = false;
-							DemoInternalState = APP_RANGING_CONFIG;
-						}
-					}
-					else
-					{
-						debug_print("RX failed\r\n");
-						DemoRunning = false;
-						DemoInternalState = APP_RANGING_CONFIG;
-					}
-					break;
-
-				case APP_TX:
-					TX_LED = 0;
-					if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
-					{
-						RX_LED = 1;
-						Radio.SetRx( ( TickTime_t ) { RX_TIMEOUT_TICK_SIZE, RNG_COM_TIMEOUT } );
-						DemoInternalState = APP_IDLE;
-					}
-					else
-					{
-						DemoRunning = false;
-						DemoInternalState = APP_RANGING_CONFIG;
-					}
-					break;
-
-				case APP_RX_TIMEOUT:
-					RX_LED = 0;
-					Eeprom.EepromData.DemoSettings.RngStatus = RNG_TIMEOUT;
-					DemoRunning = false;
-//					DemoInternalState = APP_RANGING_CONFIG;
-					// Eeprom.EepromData.DemoSettings.HoldDemo = true;
-					break;
-
-				case APP_RX_ERROR:
-					RX_LED = 0;
-//					DemoRunning = false;
-					debug_print("RX error\r\n");
-					DemoRunning = false;
-					// Eeprom.EepromData.DemoSettings.HoldDemo = true;
-					break;
-
-				case APP_TX_TIMEOUT:
-					TX_LED = 0;
-					DemoRunning = false;
-//					DemoInternalState = APP_RANGING_CONFIG;
-					// Eeprom.EepromData.DemoSettings.HoldDemo = true;
-					break;
-
-				case APP_IDLE: // do nothing
-					if (IDLElock == 0){
-						debug_print("setting start end endwait\r\n");
-						start = time(NULL);
-						endwait = start + rx_timeout;
-						IDLElock = 1;
-					}
-					else{
-						start = time(NULL);
-					}
-					if (start > endwait){
-						verbose_print("Timeout on reception\r\n");
-						StopDemoApplication();
-						Eeprom.EepromData.DemoSettings.HoldDemo = true;
-						DemoRunning = false;
-						return 0;
-                        // DemoInternalState = APP_RANGING_CONFIG;
-					}
-                    switch (rxTxEvent)
-                    {
-                    case RX_DONE:
-                        DemoInternalState = APP_RX;
-                        break;
-                    case RX_FAILED:
-                        DemoInternalState = APP_RX_ERROR;
-                        break;
-                    case TX_DONE:
-                        DemoInternalState = APP_TX;
-                        break;
-                    case RX_TIMEOUT:
-                        DemoInternalState = APP_RX_TIMEOUT;
-                        break;
-                    case TX_TIMEOUT:
-                        DemoInternalState = APP_TX_TIMEOUT;
-                        break;
-                    case NOTHING_PENDING:
-                        DemoInternalState = APP_IDLE;
-                        break;
-                    }
-                    /* clearing event flag */
-                    rxTxEvent = NOTHING_PENDING;
-                    break;
-
-				default:
-//					DemoRunning = false;
-					DemoInternalState = APP_RANGING_CONFIG;
-					Eeprom.EepromData.DemoSettings.HoldDemo = true;
-					break;
-			}
-		}
-		else    // Slave
-		{
-            if (previous_state != (char *) &states[DemoInternalState]) {
-                debug_print("*** State: %s ***\r\n", states[DemoInternalState]);
-            }
-            previous_state = (char *) &states[DemoInternalState];
-			switch( DemoInternalState )
-			{
-				case APP_RANGING_CONFIG:
-					debug_print("SLAVE : Setting APP_RANGING_CONFIG\n\r");
-					Eeprom.EepromData.DemoSettings.RngStatus = RNG_INIT;
-					ModulationParams.PacketType = PACKET_TYPE_LORA;
-					PacketParams.PacketType     = PACKET_TYPE_LORA;
-					memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
-					memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
-					memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
-					memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
-					memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
-					PacketParams.Params.LoRa.PayloadLength = 9;
-					memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
-					memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
-					Radio.SetPacketType( ModulationParams.PacketType );
-					Radio.SetModulationParams( &ModulationParams );
-					Radio.SetPacketParams( &PacketParams );
-					Radio.SetRfFrequency( Eeprom.EepromData.DemoSettings.Frequency );
-					RX_LED = 1;
-					// use listen mode here instead of rx continuous
-					Radio.SetRx( ( TickTime_t ) { RX_TIMEOUT_TICK_SIZE, 0xFFFF } );
-					DemoInternalState = APP_IDLE;
-					break;
-
-				case APP_RNG:
-					if( SendNext == true )
-					{
-						SendNext = false;
-						MeasuredChannels++;
-						if( MeasuredChannels <= Eeprom.EepromData.DemoSettings.RngRequestCount )
-						{
-							Radio.SetRfFrequency( Channels[CurrentChannel] );
-							RX_LED = 1;
-							switch( Eeprom.EepromData.DemoSettings.RngAntenna )
-							{
-								case DEMO_RNG_ANT_1:
-									//ANT_SW = 1; // ANT1
-									Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
-									CurrentChannel++;
-									if( CurrentChannel >= CHANNELS )
-									{
-										CurrentChannel -= CHANNELS;
-									}
-									break;
-
-								case DEMO_RNG_ANT_0:
-									//ANT_SW = 0; // ANT0
-									Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
-									CurrentChannel++;
-									if( CurrentChannel >= CHANNELS )
-									{
-										CurrentChannel -= CHANNELS;
-									}
-									break;
-
-								case DEMO_RNG_ANT_BOTH:
-									if( ANT_SW == 1 )
-									{
-										//ANT_SW = 0;
-										Eeprom.EepromData.DemoSettings.AntennaSwitch = 1;
-									}
-									else
-									{
-										//ANT_SW = 1;
-										Eeprom.EepromData.DemoSettings.AntennaSwitch = 0;
-										CurrentChannel++;
-										if( CurrentChannel >= CHANNELS )
-										{
-											CurrentChannel -= CHANNELS;
-										}
-									}
-									break;
-							}
-							SetAntennaSwitch( );
-							DemoInternalState = APP_IDLE;
-							Radio.SetRx( ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, Eeprom.EepromData.DemoSettings.RngReqDelay } );
-						}
-						else
-						{
-							Radio.SetStandby( STDBY_RC );
-							refreshDisplay = 1;
-							SendNextPacket.detach( );
-							Eeprom.EepromData.DemoSettings.RngStatus = RNG_VALID;
-							DemoInternalState = APP_RANGING_CONFIG;
-							debug_print("Ranging Completed, waiting for the next request, CntPacketRxOK = %s, CntPacketRxKOSlave = %s\r\n",GetMenuDemoRxOk(),GetMenuDemoRxKoSlave());
-						}
-					}
-					break;
-
-				case APP_RANGING_DONE:
-					RX_LED = 0;
-					Eeprom.EepromData.DemoSettings.CntPacketRxOK++;
-					DemoInternalState = APP_RNG;
-					debug_print("Ranging Request Received (reponse by the chip ?)\r\n");
-					break;
-
-				case APP_RANGING_TIMEOUT:
-					RX_LED = 0;
-					DemoInternalState = APP_RNG;
-					break;
-
-				case APP_RX:
-					RX_LED = 0;
-					if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
-					{
-						Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
-						Radio.GetPacketStatus( &PacketStatus );
-						if( ( BufferSize > 0 ) && \
-							( Buffer[0] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF ) ) && \
-							( Buffer[1] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 16 ) & 0xFF ) ) && \
-							( Buffer[2] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF ) ) && \
-							( Buffer[3] == (   Eeprom.EepromData.DemoSettings.RngAddress         & 0xFF ) ) )
-						{
-							Eeprom.EepromData.DemoSettings.RngFei    = Radio.GetFrequencyError( );
-							Eeprom.EepromData.DemoSettings.RssiValue = PacketStatus.LoRa.RssiPkt;
-							Eeprom.EepromData.DemoSettings.CntPacketTx++;
-							CurrentChannel                                 = Buffer[4];
-							Eeprom.EepromData.DemoSettings.RngAntenna      = Buffer[5];
-							Eeprom.EepromData.DemoSettings.RngRequestCount = Buffer[6];
-							wait_us( 10 );
-							Buffer[4] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) >> 24 ) & 0xFF ;
-							Buffer[5] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) >> 16 ) & 0xFF ;
-							Buffer[6] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) >>  8 ) & 0xFF ;
-							Buffer[7] = ( ( ( int32_t )Eeprom.EepromData.DemoSettings.RngFei ) & 0xFF );
-							Buffer[8] = Eeprom.EepromData.DemoSettings.RssiValue;
-							TX_LED = 1;
-							Radio.SendPayload( Buffer, 9, ( TickTime_t ){ RX_TIMEOUT_TICK_SIZE, RNG_COM_TIMEOUT } );
-							DemoInternalState = APP_IDLE;
-						}
-						else
-						{
-							DemoInternalState = APP_RANGING_CONFIG;
-						}
-					}
-					else
-					{
-						DemoInternalState = APP_RANGING_CONFIG;
-					}
-					break;
-
-				case APP_TX:
-					TX_LED = 0;
-					if( Eeprom.EepromData.DemoSettings.RngStatus == RNG_INIT )
-					{
-						debug_print("Start Ranging Process\r\n");
-						Eeprom.EepromData.DemoSettings.RngStatus = RNG_PROCESS;
-
-						ModulationParams.PacketType = PACKET_TYPE_RANGING;
-						PacketParams.PacketType     = PACKET_TYPE_RANGING;
-
-						memcpy( &( ModulationParams.Params.LoRa.SpreadingFactor ), Eeprom.Buffer + MOD_RNG_SPREADF_EEPROM_ADDR,      1 );
-						memcpy( &( ModulationParams.Params.LoRa.Bandwidth ),       Eeprom.Buffer + MOD_RNG_BW_EEPROM_ADDR,           1 );
-						memcpy( &( ModulationParams.Params.LoRa.CodingRate ),      Eeprom.Buffer + MOD_RNG_CODERATE_EEPROM_ADDR,     1 );
-						memcpy( &( PacketParams.Params.LoRa.PreambleLength ),      Eeprom.Buffer + PAK_RNG_PREAMBLE_LEN_EEPROM_ADDR, 1 );
-						memcpy( &( PacketParams.Params.LoRa.HeaderType ),          Eeprom.Buffer + PAK_RNG_HEADERTYPE_EEPROM_ADDR,   1 );
-						PacketParams.Params.LoRa.PayloadLength = 10;
-						memcpy( &( PacketParams.Params.LoRa.Crc ),                 Eeprom.Buffer + PAK_RNG_CRC_MODE_EEPROM_ADDR,     1 );
-						memcpy( &( PacketParams.Params.LoRa.InvertIQ ),            Eeprom.Buffer + PAK_RNG_IQ_INV_EEPROM_ADDR,       1 );
-
-						Radio.SetPacketType( ModulationParams.PacketType );
-
-						Radio.SetModulationParams( &ModulationParams );
-						Radio.SetPacketParams( &PacketParams );
-						Radio.SetDeviceRangingAddress( Eeprom.EepromData.DemoSettings.RngAddress );
-						Radio.SetRangingCalibration( Eeprom.EepromData.DemoSettings.RngCalib );
-						Radio.SetTxParams( Eeprom.EepromData.DemoSettings.TxPower, RADIO_RAMP_20_US );
-						Eeprom.EepromData.DemoSettings.CntPacketRxOK = 0;
-						MeasuredChannels = 0;
-						Eeprom.EepromData.DemoSettings.CntPacketRxKOSlave = 0;
-						SendNextPacket.attach_us( &SendNextPacketEvent, Eeprom.EepromData.DemoSettings.RngReqDelay * 1000 );
-						DemoInternalState = APP_RNG;
-					}
-					else
-					{
-						DemoInternalState = APP_RANGING_CONFIG;
-					}
-					break;
-
-				case APP_RX_TIMEOUT:
-					RX_LED = 0;
-					DemoInternalState = APP_RANGING_CONFIG;
-					break;
-
-				case APP_RX_ERROR:
-					RX_LED = 0;
-					DemoInternalState = APP_RANGING_CONFIG;
-					break;
-
-				case APP_TX_TIMEOUT:
-					TX_LED = 0;
-					DemoInternalState = APP_RANGING_CONFIG;
-					break;
-
-				case APP_IDLE: // do nothing
-					if( Eeprom.EepromData.DemoSettings.CntPacketRxKOSlave > DEMO_RNG_CHANNELS_COUNT_MAX )
-					{
-						Eeprom.EepromData.DemoSettings.CntPacketRxKOSlave = 0;
-						refreshDisplay = 1;
-						RX_LED = 0;
-						DemoInternalState = APP_RANGING_CONFIG;
-						SendNextPacket.detach( );
-					}
-                    switch (rxTxEvent)
-                    {
-                    case RX_DONE:
-                        DemoInternalState = APP_RX;
-                        break;
-                    case RX_FAILED:
-                        DemoInternalState = APP_RX_ERROR;
-                        break;
-                    case TX_DONE:
-                        DemoInternalState = APP_TX;
-                        break;
-                    case RX_TIMEOUT:
-                        DemoInternalState = APP_RX_TIMEOUT;
-                        break;
-                    case TX_TIMEOUT:
-                        DemoInternalState = APP_TX_TIMEOUT;
-                        break;
-                    case NOTHING_PENDING:
-                        DemoInternalState = APP_IDLE;
-                        break;
-                    }
-                    /* clearing event flag */
-                    rxTxEvent = NOTHING_PENDING;
-					break;
-
-				default:
-					DemoInternalState = APP_RANGING_CONFIG;
-					SendNextPacket.detach( );
-					break;
-			}
-		}
-//		start = time(NULL);
+        verbose_print("Setting Master\r\n");
+        Eeprom.EepromData.DemoSettings.TimeOnAir = RX_TX_INTER_PACKET_DELAY;
+        Radio.SetDioIrqParams( IRQ_RX_DONE | IRQ_TX_DONE | IRQ_RX_TX_TIMEOUT | IRQ_RANGING_MASTER_RESULT_VALID | IRQ_RANGING_MASTER_TIMEOUT,
+                                IRQ_RX_DONE | IRQ_TX_DONE | IRQ_RX_TX_TIMEOUT | IRQ_RANGING_MASTER_RESULT_VALID | IRQ_RANGING_MASTER_TIMEOUT,
+                                IRQ_RADIO_NONE, IRQ_RADIO_NONE );
+        Eeprom.EepromData.DemoSettings.RngDistance = 0.0;
+        DemoInternalState = APP_RANGING_CONFIG;
     }
-    return refreshDisplay;
+    else
+    {
+        Radio.SetDioIrqParams( IRQ_RADIO_ALL, IRQ_RADIO_ALL, IRQ_RADIO_NONE, IRQ_RADIO_NONE );
+        DemoInternalState = APP_RANGING_CONFIG;
+    }
+    
+    if( Eeprom.EepromData.DemoSettings.Entity == MASTER )
+    {
+        while (1) {
+            masterFSM();
+        }
+    }
+    else    // Slave
+    {
+        while (1) {
+            slaveFSM();
+        }
+    }
 }
 
 // ************************        Utils            ****************************
@@ -1312,12 +1310,14 @@ void SetAntennaSwitch( void )
 // *****************************************************************************
 void OnTxDone( void )
 {
-    // DemoInternalState = APP_TX;
+    // DemoInternalState = APP_ENABLE_RX;
+    verbose_print("Tx done\r\n");
     rxTxEvent = TX_DONE;
 }
 
 void OnRxDone( void )
 {
+    verbose_print("Rx done\r\n");
 	Radio.GetPayload( Buffer, &BufferSize, BUFFER_SIZE );
 	if( (BufferSize > 0 ) && \
 			( Buffer[0] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >> 24 ) & 0xFF ) ) && \
@@ -1325,7 +1325,7 @@ void OnRxDone( void )
 			( Buffer[2] == ( ( Eeprom.EepromData.DemoSettings.RngAddress >>  8 ) & 0xFF ) ) && \
 			( Buffer[3] == (   Eeprom.EepromData.DemoSettings.RngAddress         & 0xFF ) ) )
 	{
-    	// DemoInternalState = APP_RX;
+    	// DemoInternalState = APP_MSG_RECEIVED;
         rxTxEvent = RX_DONE;
     }
     else{
@@ -1354,17 +1354,18 @@ void OnRxError( IrqErrorCode_t errorCode )
 
 void OnRangingDone( IrqRangingCode_t val )
 {
+    verbose_print("Ranging done\r\n");
     if( val == IRQ_RANGING_MASTER_VALID_CODE || val == IRQ_RANGING_SLAVE_VALID_CODE )
     {
-        DemoInternalState = APP_RANGING_DONE;
+        ranging_flag = RANGING_COMPLETED;
     }
     else if( val == IRQ_RANGING_MASTER_ERROR_CODE || val == IRQ_RANGING_SLAVE_ERROR_CODE )
     {
-        DemoInternalState = APP_RANGING_TIMEOUT;
+        ranging_flag = RANGING_FAILED;
     }
     else
     {
-        DemoInternalState = APP_RANGING_TIMEOUT;
+        ranging_flag = RANGING_TIMEOUT;
     }
 }
 
