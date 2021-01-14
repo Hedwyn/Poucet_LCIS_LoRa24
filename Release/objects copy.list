@@ -1,0 +1,7 @@
+"Peripherals/Eeprom.o"
+"Peripherals/Timers.o"
+"Utils/SX1280Lib/RangingCorrection.o"
+"Utils/SX1280Lib/sx1280-hal.o"
+"Utils/SX1280Lib/sx1280.o"
+"Utils/Utils.o"
+"main.o"

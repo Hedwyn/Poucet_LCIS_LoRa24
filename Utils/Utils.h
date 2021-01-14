@@ -12,11 +12,14 @@ Description: Display demo menus and manage touch sensor, header
 Maintainer: Gregory Cristian & Gilbert Menth
 */
 
+#include <radio.h>
+#include <array>
+
 #ifndef UTILS_H
 #define UTILS_H
 #define DEBUG 0 /**<Enables debug mode on the serial stream*/
-#define VERBOSE 1 /**<Enables verbose mode on the serial stream*/
-#define PROFILING 1 /**<Enables timer stream on the serial output*/
+#define VERBOSE 0   /**<Enables verbose mode on the serial stream*/
+#define PROFILING 0 /**<Enables timer stream on the serial output*/
 #define debug_print(fmt, ...) \
             do { if (DEBUG) printf(fmt, ##__VA_ARGS__); } while (0)
 #define verbose_print(fmt, ...) \
@@ -94,6 +97,20 @@ const uint16_t DEMO_RNG_CHANNELS_COUNT_MIN = 10;
 #define DEMO_FLRC_MAX_PAYLOAD       127
 #define DEMO_GFS_LORA_MAX_PAYLOAD   255
 
+/*!
+ * \brief Integer value of the ASCII char '0'. Used to convert char to integers
+ */
+#define ASCII_0 48
+
+/*!
+ * \brief Minimum spreading factor allowed int eh RF settings
+ */
+#define SF_MIN 5
+
+/*!
+ * \brief Maximum spreading factor allowed int eh RF settings
+ */
+#define SF_MAX 12
 
 /*!
  * \brief Define current demo mode
@@ -116,12 +133,113 @@ enum RangingStatus
     RNG_PER_ERROR
 };
 
+enum Event_t
+{
+    NOTHING_PENDING,
+    TRANSCEIVER_READY,
+    TX_DONE,
+    RX_DONE,
+    REQUEST_RECEIVED,
+    REQUEST_SENT,
+    RX_FAILED,
+    TX_FAILED,
+    TX_TIMEOUT,
+    RX_TIMEOUT,
+    PROBING_INIT,
+    PROBING_COMPLETED,
+    PROBING_FAILED, 
+    RANGING_TIMER,
+    PROBING_DONE,
+    RANGING_TIMEOUT,
+    RANGING_COMPLETED, 
+    EXIT_FSM
+};
+
+template<typename T, int sz>
+inline const int size(T(&)[sz])
+{
+    return sz;
+}
+
+/** Serial commands **/
+/*!
+ * \brief Class for serial commands; each command has a 1-char code sent as the header of the command. 
+ */
+class SerialCommand
+{
+public:
+    SerialCommand(char code, const char *description = "") : code(code), description(description) {}
+    char code;
+    const char *description;
+};
+
+/** FSM **/
+/*!
+ * \brief Represents a Finite State Machine state.
+ */
+class FSMState
+{
+public:
+    FSMState(const char *name, void (&func)(FSMState *)) : name(name), func(func) {}
+    bool isTimerEnabled = false;
+    const char *getName() const
+    {
+        return (this->name);
+    }
+    void (&func)(FSMState *);
+    Event_t toggle() {
+        this->func(this);
+        return(this->lastEvent);
+    }
+    Event_t lastEvent = NOTHING_PENDING;
+    void clear() {
+        lastEvent = NOTHING_PENDING;
+    }
+    uint32_t getElapsedTime() 
+    {
+        uint32_t currentTime = HAL_GetTick(), lastTime = this->timer;
+        this->timer = currentTime;
+        return(currentTime - lastTime);
+    }
+
+    void resetTimer() {
+        this->timer = HAL_GetTick();
+    }
+  
+private:
+    const char *name;
+    uint32_t timer;  
+};
+
+class FSMTransition
+{
+public:
+    FSMTransition(const Event_t onEvent, FSMState &from, FSMState &to) : onEvent(onEvent), from(from), to(to) {}
+    const Event_t onEvent;
+    FSMState &from;
+    FSMState &to;
+};
+
+class FSM
+{
+public:
+    FSM(FSMState &inputState, const FSMTransition * transitionsMatrix, const int transitionsMatrixSize, FSMState * const idle = NULL): inputState(inputState), transitionsMatrix(transitionsMatrix), transitionsMatrixSize(transitionsMatrixSize), idle(idle) {}
+    FSMState &inputState;
+    const FSMTransition * transitionsMatrix;
+    const int transitionsMatrixSize;
+    Event_t lastEvent;
+    void run();
+    bool findTransition(Event_t event, FSMState *from, FSMState*& to);
+private:
+    FSMState *currentState = &inputState;
+    FSMState *idle;
+};
+
 /*!
  * \brief List of states for demo state machine
  */
-enum DemoInternalStates
-{
-    APP_IDLE,               // nothing to do (or wait a radio interrupt)
+enum DemoInternalStates {
+    APP_IDLE, // nothing to do (or wait a radio interrupt)
     APP_RANGING_DONE,
     APP_RANGING_TIMEOUT,
     APP_RANGING_CONFIG,
@@ -129,13 +247,13 @@ enum DemoInternalStates
     APP_RNG,
     SEND_PING_MSG,
     SEND_PONG_MSG,
-    APP_MSG_RECEIVED,           // Rx done
-    APP_RX_TIMEOUT,             // Rx timeout
-    APP_RX_ERROR,               // Rx error
-    APP_ENABLE_RX,              // Tx done
-    APP_TX_TIMEOUT,             // Tx error
-    PER_TX_START,               // PER master
-    PER_RX_START                // PER slave
+    APP_MSG_RECEIVED, // Rx done
+    APP_RX_TIMEOUT,   // Rx timeout
+    APP_RX_ERROR,     // Rx error
+    APP_ENABLE_RX,    // Tx done
+    APP_TX_TIMEOUT,   // Tx error
+    PER_TX_START,     // PER master
+    PER_RX_START      // PER slave
 };
 
 /*!
@@ -200,7 +318,52 @@ enum FreqBase
     FB1M    = 1000000,      //   1 MHz
     FB10M   = 10000000      //  10 MHz
 };
+/*!
+ * \brief List of events for Finite State Machine transitions
+ */
+// enum Event_t 
+// {
+//     MSG_RECEIVED,
+//     TX_DONE,
+//     REQ_TIMEOUT,
+//     RNG_TIMEOUT
+// }
+/*!
+ * \brief Function to be executed on Radio Tx Done event
+ */
 
+/* globals */
+extern int total_slaves;
+void OnTxDone( void );
+
+/*!
+ * \brief Function to be executed on Radio Rx Done event
+ */
+void OnRxDone( void );
+
+/*!
+ * \brief Function executed on Radio Tx Timeout event
+ */
+void OnTxTimeout( void );
+
+/*!
+ * \brief Function executed on Radio Rx Timeout event
+ */
+void OnRxTimeout( void );
+
+/*!
+ * \brief Function executed on Radio Rx Error event
+ */
+void OnRxError( IrqErrorCode_t );
+
+/*!
+ * \brief Function executed on Radio Rx Error event
+ */
+void OnRangingDone( IrqRangingCode_t );
+
+/*!
+ * \brief All the callbacks are stored in a structure
+ */
 
 /*!
  * \brief Init RAM copy of Eeprom structure and init radio with it.
