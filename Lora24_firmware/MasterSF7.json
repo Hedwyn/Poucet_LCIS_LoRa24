@@ -1,0 +1,9 @@
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-87","zn":"0","distance":"0.3","fei":"1964","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-85","zn":"0","distance":"0.9","fei":"3911","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-86","zn":"0","distance":"0.3","fei":"1863","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-83","zn":"0","distance":"1.1","fei":"1863","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-81","zn":"0","distance":"0.4","fei":"1863","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-82","zn":"0","distance":"0.5","fei":"1863","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-81","zn":"0","distance":"0.3","fei":"1863","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-82","zn":"0","distance":"0.4","fei":"1863","initiator":"master","target":"1"}
+{"type":"LoRa2.4","frequency":"2.402 GHz","bw":"BW 800 kHz","sf":"SF7","cr":"CR 4/5","rssi":"-82","zn":"0","distance":"0.6","fei":"1863","initiator":"master","target":"1"}

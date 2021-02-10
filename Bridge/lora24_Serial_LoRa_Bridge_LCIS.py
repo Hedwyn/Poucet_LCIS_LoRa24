@@ -15,7 +15,7 @@ MQTT_BROKER_ADDRESS = '127.0.0.1'
 MQTT_BROKER_PORT = 1883
 MQTT_PUBLISH_TOPIC_LORA = 'poucet/1/LoRa2.4'
 
-LORA_DEVICE_PORT=None
+LORA_DEVICE_PORT= 'COM17'
 serialFile = None
 mqtt_client = None
 
@@ -71,14 +71,17 @@ def handleSerialMessage(msg):
     except:
         print("Error Reading JSON, corrupted JSON file")
         return
-    try:
-        if parsedMsg["type"] == "LoRa2.4":
-            print("Publishing LoRa2.4 message")
-            mqtt_client.publish(MQTT_PUBLISH_TOPIC_LORA,loraMessage)
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    except:
-        print("Error Reading JSON, property 'type' missing")
+    # try:
+    if parsedMsg["type"] == "LoRa2.4":
+        # incertitude = 3 + float(parsedMsg["distance"]) * 0.08
+        # parsedMsg["incertitude"] = incertitude
+        print("Publishing LoRa2.4 message")
+        mqtt_client.publish(MQTT_PUBLISH_TOPIC_LORA,loraMessage)
+        # print("hey !")
+    # except (KeyboardInterrupt, SystemExit):
+    #     raise
+    # except:
+    #     print("Error Reading JSON, property 'type' missing")
 
 '''---MQTT Related Functions---'''
 # Function Triggered when the MQTT Client succeeded to connect to the MQTTBroker 

@@ -1,0 +1,87 @@
+[
+    {
+        "module": "NUCLEO_L432KC\\GCC_ARM-DEBUG",
+        "size": {
+            ".text": 1564,
+            ".data": 48,
+            ".bss": 1330,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[fill]",
+        "size": {
+            ".text": 62,
+            ".data": 4,
+            ".bss": 28,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\c_nano.a",
+        "size": {
+            ".text": 2648,
+            ".data": 100,
+            ".bss": 12,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\gcc.a",
+        "size": {
+            ".text": 3260,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\m.a",
+        "size": {
+            ".text": 96,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\misc",
+        "size": {
+            ".text": 224,
+            ".data": 4,
+            ".bss": 28,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "libraries\\SX1280",
+        "size": {
+            ".text": 37594,
+            ".data": 276,
+            ".bss": 2578,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "summary": {
+            "static_ram": 4408,
+            "static_ram_delta": 0,
+            "total_flash": 45880,
+            "total_flash_delta": 0
+        }
+    }
+]

@@ -1,0 +1,87 @@
+[
+    {
+        "module": "BUILD\\NUCLEO_L432KC",
+        "size": {
+            ".text": 1338,
+            ".data": 39,
+            ".bss": 1325,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "BUILD\\libraries",
+        "size": {
+            ".text": 37006,
+            ".data": 276,
+            ".bss": 2578,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[fill]",
+        "size": {
+            ".text": 64,
+            ".data": 5,
+            ".bss": 33,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\c_nano.a",
+        "size": {
+            ".text": 2648,
+            ".data": 100,
+            ".bss": 12,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\gcc.a",
+        "size": {
+            ".text": 3260,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\m.a",
+        "size": {
+            ".text": 96,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\misc",
+        "size": {
+            ".text": 224,
+            ".data": 4,
+            ".bss": 28,
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "summary": {
+            "static_ram": 4400,
+            "static_ram_delta": 0,
+            "total_flash": 45060,
+            "total_flash_delta": 0
+        }
+    }
+]

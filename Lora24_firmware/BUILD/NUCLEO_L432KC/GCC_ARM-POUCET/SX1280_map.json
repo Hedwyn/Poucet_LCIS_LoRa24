@@ -1,0 +1,186 @@
+[
+    {
+        "module": "Peripherals\\Eeprom.o",
+        "size": {
+            ".text": 1840,
+            ".data": 0,
+            ".bss": 256,
+            ".text-delta": 1840,
+            ".data-delta": 0,
+            ".bss-delta": 256
+        }
+    },
+    {
+        "module": "Peripherals\\Timers.o",
+        "size": {
+            ".text": 68,
+            ".data": 0,
+            ".bss": 64,
+            ".text-delta": 68,
+            ".data-delta": 0,
+            ".bss-delta": 64
+        }
+    },
+    {
+        "module": "SX1280Lib\\RangingCorrection.o",
+        "size": {
+            ".text": 296,
+            ".data": 144,
+            ".bss": 0,
+            ".text-delta": 296,
+            ".data-delta": 144,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "SX1280Lib\\sx1280-hal.o",
+        "size": {
+            ".text": 2458,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 2458,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "SX1280Lib\\sx1280.o",
+        "size": {
+            ".text": 2938,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 2938,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "Utils\\Utils.o",
+        "size": {
+            ".text": 4672,
+            ".data": 37,
+            ".bss": 3351,
+            ".text-delta": 4672,
+            ".data-delta": 37,
+            ".bss-delta": 3351
+        }
+    },
+    {
+        "module": "[fill]",
+        "size": {
+            ".text": 90,
+            ".data": 10,
+            ".bss": 39,
+            ".text-delta": 90,
+            ".data-delta": 10,
+            ".bss-delta": 39
+        }
+    },
+    {
+        "module": "[lib]\\c_nano.a",
+        "size": {
+            ".text": 2648,
+            ".data": 100,
+            ".bss": 12,
+            ".text-delta": 2648,
+            ".data-delta": 100,
+            ".bss-delta": 12
+        }
+    },
+    {
+        "module": "[lib]\\gcc.a",
+        "size": {
+            ".text": 3352,
+            ".data": 0,
+            ".bss": 0,
+            ".text-delta": 3352,
+            ".data-delta": 0,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\m.a",
+        "size": {
+            ".text": 4580,
+            ".data": 1,
+            ".bss": 0,
+            ".text-delta": 4580,
+            ".data-delta": 1,
+            ".bss-delta": 0
+        }
+    },
+    {
+        "module": "[lib]\\misc",
+        "size": {
+            ".text": 224,
+            ".data": 4,
+            ".bss": 28,
+            ".text-delta": 224,
+            ".data-delta": 4,
+            ".bss-delta": 28
+        }
+    },
+    {
+        "module": "main.o",
+        "size": {
+            ".text": 412,
+            ".data": 4,
+            ".bss": 944,
+            ".text-delta": 412,
+            ".data-delta": 4,
+            ".bss-delta": 944
+        }
+    },
+    {
+        "module": "mbed-os\\drivers",
+        "size": {
+            ".text": 4116,
+            ".data": 0,
+            ".bss": 832,
+            ".text-delta": 4116,
+            ".data-delta": 0,
+            ".bss-delta": 832
+        }
+    },
+    {
+        "module": "mbed-os\\hal",
+        "size": {
+            ".text": 1406,
+            ".data": 8,
+            ".bss": 114,
+            ".text-delta": 1406,
+            ".data-delta": 8,
+            ".bss-delta": 114
+        }
+    },
+    {
+        "module": "mbed-os\\platform",
+        "size": {
+            ".text": 5920,
+            ".data": 276,
+            ".bss": 444,
+            ".text-delta": 5920,
+            ".data-delta": 276,
+            ".bss-delta": 444
+        }
+    },
+    {
+        "module": "mbed-os\\targets",
+        "size": {
+            ".text": 17556,
+            ".data": 8,
+            ".bss": 1236,
+            ".text-delta": 17556,
+            ".data-delta": 8,
+            ".bss-delta": 1236
+        }
+    },
+    {
+        "summary": {
+            "static_ram": 7912,
+            "static_ram_delta": 7912,
+            "total_flash": 53168,
+            "total_flash_delta": 53168
+        }
+    }
+]
