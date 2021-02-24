@@ -1,8 +1,0 @@
-BUILD\libraries\SX1280\NUCLEO_L432KC\GCC_ARM-DEBUG\mbed-os\platform\source\mbed_assert.o: \
- mbed-os\platform\source\mbed_assert.c \
- BUILD\libraries\SX1280\NUCLEO_L432KC\GCC_ARM-DEBUG\mbed_config.h \
- mbed-os/platform/include/platform/mbed_assert.h \
- mbed-os/platform/include/platform/mbed_toolchain.h \
- mbed-os/platform/include/platform/mbed_preprocessor.h \
- mbed-os/platform/include/platform/mbed_error.h \
- mbed-os/platform/include/platform/mbed_retarget.h
