@@ -1,3 +1,0 @@
-BUILD\libraries\SX1280\NUCLEO_L476RG\GCC_ARM-RELEASE\mbed-os\cmsis\CMSIS_5\CMSIS\TARGET_CORTEX_M\Source\mbed_tz_context.o: \
- mbed-os\cmsis\CMSIS_5\CMSIS\TARGET_CORTEX_M\Source\mbed_tz_context.c \
- BUILD\libraries\SX1280\NUCLEO_L476RG\GCC_ARM-RELEASE\mbed_config.h
