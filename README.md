@@ -26,16 +26,16 @@ Installing and running the project should take only a few minutes !
         python -m venv Poucet_LCIS_LoRa24
         '''
     * You can then install Mbed client 1 with the following command:
-        ```console
+        ```shell
         pip install mbed-cli
         ```
         Check that Mbed client 1 is working by prompting:
-            ```console
+            ```shell
             mbed config
             ```  
         You should see Mbed configuration being displayed if everything is working fine.
 1. Check your installation — at that point everything should be ready. Plug two ranging boards (it does not matter if they are based on Nucleo L432KC or L476RG — the script will automatically take care of recognizing the model and deploying the proper firmware) to your computer and run:
-    ```console
+    ```shell
     cd Lora24_firmware
     python Deployment.py
     ```
@@ -55,7 +55,7 @@ The SX1280 driver provided was originally based on Arm Mbed 5
 
 This project contains:
 * Ranging boards firmware: several programs are available. You can also easily create your own programs and use them with the deployment tool, which will be much master than compiling and flashing each board manually.  Each program dependencies and source files are defined in json profile file, which are found at the root of the Lora24_firmware directory.  The default profile is currently *Poucet.json*. If you want to compile to deploy you new project MyProject.json, you can simply use the flag *-build* for the Deployment script:
-    ```console
+    ```shell
     python Deployment.py -build MyProject.json
     ```  
     For further instructions on the content of these json profiles, refer to the *Project Manual* section.
@@ -63,7 +63,7 @@ This project contains:
 * **Calibration and characterization scripts**, in the *Calibration* subdirectory: allow a utomatically calibrating and charactzering the performances of the ranging boardfs in different scenarios. Time-of-Flights measurements are very sensitive to various sources of delays introduced by manufacturing inconsistencies, including notably the antenna path delay and the crystal clock drift. These parameters typically differ from one chip to another, and need to be individually estimated to calibrate the distance estimations. The calibration scripts will automatically estimate these parameters for you if you plug a board requiring calibration to your computer.  
 * **MQTT bridge**, in *Bridge* subdirectory: a *bridge* is a python script that collects the data on the serial port and publish them to MQTT topics. MQTT is an IoT messaging protocol; if you are familiar with MQTT, you can found information at: https://mqtt.org/.  The bridge is mainly intended to send the distance estimations (and other physical parameters) to a Positioning System that performs the multilateration process. This project is compatible with SecureLoc Localization Engiun, as explained below.
 * **SecureLoc middleware**, in *SecureLoc* subdirectory: SecureLoc is an open source localization engine tailored for security applications, featuring 3D rendering based on Panda 3D.  You can use SecureLoc to mount a localization system with the LoRa 2.4 Ghz ranging boards. To install SecureLoc, run:
-    ```console
+    ```shell
     git clone https://github.com/Hedwyn/SecureLoc.git
     ```  
   And follow the instructions in README @https://github.com/Hedwyn/SecureLoc.  The subdirectory contains:
@@ -92,7 +92,7 @@ The file description entry is optional and only intended for documentation purpo
 * **"Drivers"** contains a list of all the required external drivers that are not natively part of Mbed OS. For this project, you will most likely only need the SX1280 driver. It is installed by default in the *SX1280Lib* folder. If you ever need to rename that folder, change the driver name accordingly in the list contained in the *"Drivers"* field.
 * **"ProjectLibs"** contains the list of the source files and folders for your project. All the files contained in each folder provided will be included in your project. One of them should obviously include a *main*. You should append all the scripts that you wrote for your program within that list. It is more convient to encapsulate your files into one or several folders and append these folders to the list rather than adding each file one by one. 
 * **"Default build profile"** specifies which mbed build profile should be used by default when building your program. Mbed profiles contains a set of approriate compilation flags and options for a given use case (e.g., Release or Debug). Some information on the content and the principles of Mbed build profiles can be found here: https://os.mbed.com/docs/mbed-os/v6.7/build-tools/build-profiles.html. Note that you can override the default build profile by using the *-profile* flag when calling the Deployment tool, e.g.:
-```console
+```shell
 python Deployment.py -build MyProgram.json -profile debug
 ```
 
@@ -107,7 +107,7 @@ Note that you do not need to download any additional driver to use the full RTOS
 ### Updating Mbed-os 
 If the version of Arm Mbed Os included in this project is not the latest when cloning, you can easily update it yourself. Mbed-os git repository can be found at https://github.com/ARMmbed/mbed-os.
 Mbed-os is defined as a submodule of this repository. You can get the latest release by prompting at the project root:
-```console
+```shell
 git submodule update --init Lora24_firmware/mbed-os
 ```
 
