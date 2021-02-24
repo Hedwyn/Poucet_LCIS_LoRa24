@@ -34,6 +34,7 @@
     ],
     "macros": [
         "DEVICE_ID=1",
+        "NUCLEO_L432KC",
         "TOTAL_SLAVES=1"
     ],
     "symbols": [
@@ -68,8 +69,9 @@
         "DEVICE_USTICKER=1",
         "DEVICE_WATCHDOG=1",
         "EXTRA_IDLE_STACK_REQUIRED",
-        "MBED_BUILD_TIMESTAMP=1612547932.250423",
+        "MBED_BUILD_TIMESTAMP=1614161191.45784",
         "MBED_TICKLESS",
+        "NUCLEO_L432KC",
         "STM32L432xx",
         "TARGET_CORTEX",
         "TARGET_CORTEX_M",

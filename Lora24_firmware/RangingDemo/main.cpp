@@ -50,6 +50,7 @@ const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
 #define verbose_print(fmt, ...) \
             do { if (VERBOSE) printf(fmt, ##__VA_ARGS__); } while (0)
 
+#define ADVANCED_RANGING_OPCODE 0x9A
 /*!
  * \brief Ranging raw factors
  *                                  SF5     SF6     SF7     SF8     SF9     SF10
@@ -131,6 +132,13 @@ uint8_t pLength = 8;
 bool resultPending = false;
 int successiveTimeouts = 0;
 
+
+// void setAdvancedRanging()
+// {
+//     uint8_t role = RADIO_RANGING_ROLE_SLAVE;
+//     Radio.WriteCommand(RADIO_SET_RANGING_ROLE, &role, 1);
+//     Radio.WriteCommand(ADVANCED_RANGING_OPCODE, &role, 1);
+// }
 const uint8_t RANGING_ADDR[] =
 {
     0x00,

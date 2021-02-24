@@ -9102,7 +9102,7 @@ END GROUP
 LOAD c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtend.o
 LOAD c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtn.o
 
-.text           0x08000000    0x14730
+.text           0x08000000    0x14740
  *(.isr_vector)
  .isr_vector    0x08000000      0x18c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TOOLCHAIN_GCC_ARM/startup_stm32l432xx.o
                 0x08000000                g_pfnVectors
@@ -10703,225 +10703,226 @@ LOAD c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/g
                 0x0800a058       0xe8 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
                 0x0800a058                onRanging(FSMState*)
  .text.startup._GLOBAL__sub_I_StringText
-                0x0800a140      0x354 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0800a140      0x360 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .text._Z19StopDemoApplicationv
-                0x0800a494       0x84 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
-                0x0800a494                StopDemoApplication()
+                0x0800a4a0       0x84 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0800a4a0                StopDemoApplication()
  .text._Z6onIdleP8FSMState
-                0x0800a518       0x54 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
-                0x0800a518                onIdle(FSMState*)
+                0x0800a524       0x54 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0800a524                onIdle(FSMState*)
  .text._Z13processSerialv
-                0x0800a56c       0x5c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
-                0x0800a56c                processSerial()
+                0x0800a578       0x5c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0800a578                processSerial()
  .text._Z16onRangingRequestP8FSMState
-                0x0800a5c8       0x98 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
-                0x0800a5c8                onRangingRequest(FSMState*)
+                0x0800a5d4       0x98 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0800a5d4                onRangingRequest(FSMState*)
  .text._Z26PrintCompileSupportMessagev
-                0x0800a660       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
-                0x0800a660                PrintCompileSupportMessage()
+                0x0800a66c       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+                0x0800a66c                PrintCompileSupportMessage()
  .text.startup._GLOBAL__sub_I_myType
-                0x0800a690       0x68 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+                0x0800a69c       0x68 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
  .text.startup.main
-                0x0800a6f8      0x13c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
-                0x0800a6f8                main
- .text.trunc    0x0800a834       0x60 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_trunc.o)
-                0x0800a834                trunc
- .text.truncf   0x0800a894       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-sf_trunc.o)
-                0x0800a894                truncf
- .text.pow      0x0800a8b8      0x320 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-w_pow.o)
-                0x0800a8b8                pow
+                0x0800a704      0x13c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+                0x0800a704                main
+ .text.trunc    0x0800a840       0x60 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_trunc.o)
+                0x0800a840                trunc
+ .text.truncf   0x0800a8a0       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-sf_trunc.o)
+                0x0800a8a0                truncf
+ *fill*         0x0800a8c4        0x4 
+ .text.pow      0x0800a8c8      0x320 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-w_pow.o)
+                0x0800a8c8                pow
  .text.__ieee754_pow
-                0x0800abd8      0xaa8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-e_pow.o)
-                0x0800abd8                __ieee754_pow
+                0x0800abe8      0xaa8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-e_pow.o)
+                0x0800abe8                __ieee754_pow
  .text.__ieee754_sqrt
-                0x0800b680      0x178 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-e_sqrt.o)
-                0x0800b680                __ieee754_sqrt
- .text.fabs     0x0800b7f8        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_fabs.o)
-                0x0800b7f8                fabs
- .text.finite   0x0800b800        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_finite.o)
-                0x0800b800                finite
- .text.matherr  0x0800b80c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_matherr.o)
-                0x0800b80c                matherr
- .text.nan      0x0800b810        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_nan.o)
-                0x0800b810                nan
- .text.rint     0x0800b81c      0x114 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_rint.o)
-                0x0800b81c                rint
- .text.scalbn   0x0800b930       0xfc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_scalbn.o)
-                0x0800b930                scalbn
+                0x0800b690      0x178 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-e_sqrt.o)
+                0x0800b690                __ieee754_sqrt
+ .text.fabs     0x0800b808        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_fabs.o)
+                0x0800b808                fabs
+ .text.finite   0x0800b810        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_finite.o)
+                0x0800b810                finite
+ .text.matherr  0x0800b81c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_matherr.o)
+                0x0800b81c                matherr
+ .text.nan      0x0800b820        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_nan.o)
+                0x0800b820                nan
+ .text.rint     0x0800b82c      0x114 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_rint.o)
+                0x0800b82c                rint
+ .text.scalbn   0x0800b940       0xfc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_scalbn.o)
+                0x0800b940                scalbn
  .text.copysign
-                0x0800ba2c       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_copysign.o)
-                0x0800ba2c                copysign
- .text.__errno  0x0800ba3c        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-errno.o)
-                0x0800ba3c                __errno
+                0x0800ba3c       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_copysign.o)
+                0x0800ba3c                copysign
+ .text.__errno  0x0800ba4c        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-errno.o)
+                0x0800ba4c                __errno
  .text.__sflush_r
-                0x0800ba48      0x110 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fflush.o)
-                0x0800ba48                __sflush_r
+                0x0800ba58      0x110 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fflush.o)
+                0x0800ba58                __sflush_r
  .text._fflush_r
-                0x0800bb58       0x54 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fflush.o)
-                0x0800bb58                _fflush_r
- .text.fflush   0x0800bbac       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fflush.o)
-                0x0800bbac                fflush
+                0x0800bb68       0x54 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fflush.o)
+                0x0800bb68                _fflush_r
+ .text.fflush   0x0800bbbc       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fflush.o)
+                0x0800bbbc                fflush
  .text._cleanup_r
-                0x0800bbd0        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x0800bbd0                _cleanup_r
+                0x0800bbe0        0xc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x0800bbe0                _cleanup_r
  .text.std.isra.0
-                0x0800bbdc       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x0800bbec       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
  .text.__sfmoreglue
-                0x0800bc24       0x2c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x0800bc24                __sfmoreglue
- .text.__sinit  0x0800bc50       0x60 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x0800bc50                __sinit
- .text.__sfp    0x0800bcb0       0x78 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x0800bcb0                __sfp
+                0x0800bc34       0x2c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x0800bc34                __sfmoreglue
+ .text.__sinit  0x0800bc60       0x60 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x0800bc60                __sinit
+ .text.__sfp    0x0800bcc0       0x78 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x0800bcc0                __sfp
  .text._fputc_r
-                0x0800bd28       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fputc.o)
-                0x0800bd28                _fputc_r
- .text.fputc    0x0800bd70       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fputc.o)
-                0x0800bd70                fputc
+                0x0800bd38       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fputc.o)
+                0x0800bd38                _fputc_r
+ .text.fputc    0x0800bd80       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fputc.o)
+                0x0800bd80                fputc
  .text._fwalk_reent
-                0x0800bd80       0x3c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fwalk.o)
-                0x0800bd80                _fwalk_reent
+                0x0800bd90       0x3c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fwalk.o)
+                0x0800bd90                _fwalk_reent
  .text.__libc_init_array
-                0x0800bdbc       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-init.o)
-                0x0800bdbc                __libc_init_array
+                0x0800bdcc       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-init.o)
+                0x0800bdcc                __libc_init_array
  .text.__swhatbuf_r
-                0x0800be04       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-makebuf.o)
-                0x0800be04                __swhatbuf_r
+                0x0800be14       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-makebuf.o)
+                0x0800be14                __swhatbuf_r
  .text.__smakebuf_r
-                0x0800be4c       0x80 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-makebuf.o)
-                0x0800be4c                __smakebuf_r
- .text.malloc   0x0800becc       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-malloc.o)
-                0x0800becc                malloc
- .text.free     0x0800bedc       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-malloc.o)
-                0x0800bedc                free
- .text.memcpy   0x0800beec       0x16 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-memcpy-stub.o)
-                0x0800beec                memcpy
- .text.memset   0x0800bf02       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-memset.o)
-                0x0800bf02                memset
- *fill*         0x0800bf12        0x2 
- .text._free_r  0x0800bf14       0x9c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-nano-freer.o)
-                0x0800bf14                _free_r
+                0x0800be5c       0x80 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-makebuf.o)
+                0x0800be5c                __smakebuf_r
+ .text.malloc   0x0800bedc       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-malloc.o)
+                0x0800bedc                malloc
+ .text.free     0x0800beec       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-malloc.o)
+                0x0800beec                free
+ .text.memcpy   0x0800befc       0x16 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-memcpy-stub.o)
+                0x0800befc                memcpy
+ .text.memset   0x0800bf12       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-memset.o)
+                0x0800bf12                memset
+ *fill*         0x0800bf22        0x2 
+ .text._free_r  0x0800bf24       0x9c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-nano-freer.o)
+                0x0800bf24                _free_r
  .text._malloc_r
-                0x0800bfb0       0xbc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-nano-mallocr.o)
-                0x0800bfb0                _malloc_r
- .text._putc_r  0x0800c06c       0x6c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-putc.o)
-                0x0800c06c                _putc_r
- .text._puts_r  0x0800c0d8       0xb8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-puts.o)
-                0x0800c0d8                _puts_r
- .text.puts     0x0800c190       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-puts.o)
-                0x0800c190                puts
- .text._sbrk_r  0x0800c1a0       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-sbrkr.o)
-                0x0800c1a0                _sbrk_r
- .text.__sread  0x0800c1c0       0x22 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
-                0x0800c1c0                __sread
+                0x0800bfc0       0xbc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-nano-mallocr.o)
+                0x0800bfc0                _malloc_r
+ .text._putc_r  0x0800c07c       0x6c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-putc.o)
+                0x0800c07c                _putc_r
+ .text._puts_r  0x0800c0e8       0xb8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-puts.o)
+                0x0800c0e8                _puts_r
+ .text.puts     0x0800c1a0       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-puts.o)
+                0x0800c1a0                puts
+ .text._sbrk_r  0x0800c1b0       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-sbrkr.o)
+                0x0800c1b0                _sbrk_r
+ .text.__sread  0x0800c1d0       0x22 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
+                0x0800c1d0                __sread
  .text.__swrite
-                0x0800c1e2       0x38 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
-                0x0800c1e2                __swrite
- .text.__sseek  0x0800c21a       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
-                0x0800c21a                __sseek
+                0x0800c1f2       0x38 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
+                0x0800c1f2                __swrite
+ .text.__sseek  0x0800c22a       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
+                0x0800c22a                __sseek
  .text.__sclose
-                0x0800c23e        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
-                0x0800c23e                __sclose
- *fill*         0x0800c246        0x2 
+                0x0800c24e        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-stdio.o)
+                0x0800c24e                __sclose
+ *fill*         0x0800c256        0x2 
  .text.__swbuf_r
-                0x0800c248       0xa4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-wbuf.o)
-                0x0800c248                __swbuf_r
+                0x0800c258       0xa4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-wbuf.o)
+                0x0800c258                __swbuf_r
  .text._write_r
-                0x0800c2ec       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-writer.o)
-                0x0800c2ec                _write_r
+                0x0800c2fc       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-writer.o)
+                0x0800c2fc                _write_r
  .text.__swsetup_r
-                0x0800c310       0xdc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-wsetup.o)
-                0x0800c310                __swsetup_r
+                0x0800c320       0xdc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-wsetup.o)
+                0x0800c320                __swsetup_r
  .text._close_r
-                0x0800c3ec       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-closer.o)
-                0x0800c3ec                _close_r
+                0x0800c3fc       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-closer.o)
+                0x0800c3fc                _close_r
  .text._fstat_r
-                0x0800c40c       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fstatr.o)
-                0x0800c40c                _fstat_r
+                0x0800c41c       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-fstatr.o)
+                0x0800c41c                _fstat_r
  .text._isatty_r
-                0x0800c430       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-isattyr.o)
-                0x0800c430                _isatty_r
+                0x0800c440       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-isattyr.o)
+                0x0800c440                _isatty_r
  .text._lseek_r
-                0x0800c450       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-lseekr.o)
-                0x0800c450                _lseek_r
- .text._read_r  0x0800c474       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-readr.o)
-                0x0800c474                _read_r
- .text          0x0800c498       0x18 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_lshrdi3.o)
-                0x0800c498                __lshrdi3
-                0x0800c498                __aeabi_llsr
- .text          0x0800c4b0       0x18 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_ashldi3.o)
-                0x0800c4b0                __ashldi3
-                0x0800c4b0                __aeabi_llsl
- .text          0x0800c4c8      0x370 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_addsubdf3.o)
-                0x0800c4c8                __aeabi_drsub
-                0x0800c4d0                __subdf3
-                0x0800c4d0                __aeabi_dsub
-                0x0800c4d4                __aeabi_dadd
-                0x0800c4d4                __adddf3
-                0x0800c74c                __floatunsidf
-                0x0800c74c                __aeabi_ui2d
-                0x0800c76c                __aeabi_i2d
-                0x0800c76c                __floatsidf
-                0x0800c790                __extendsfdf2
-                0x0800c790                __aeabi_f2d
-                0x0800c7cc                __floatundidf
-                0x0800c7cc                __aeabi_ul2d
-                0x0800c7dc                __aeabi_l2d
-                0x0800c7dc                __floatdidf
- .text          0x0800c838      0x424 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_muldivdf3.o)
-                0x0800c838                __aeabi_dmul
-                0x0800c838                __muldf3
-                0x0800ca8c                __divdf3
-                0x0800ca8c                __aeabi_ddiv
- .text          0x0800cc5c      0x110 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_cmpdf2.o)
-                0x0800cc5c                __gtdf2
-                0x0800cc5c                __gedf2
-                0x0800cc64                __ltdf2
-                0x0800cc64                __ledf2
-                0x0800cc6c                __nedf2
-                0x0800cc6c                __cmpdf2
-                0x0800cc6c                __eqdf2
-                0x0800cce8                __aeabi_cdrcmple
-                0x0800ccf8                __aeabi_cdcmple
-                0x0800ccf8                __aeabi_cdcmpeq
-                0x0800cd08                __aeabi_dcmpeq
-                0x0800cd1c                __aeabi_dcmplt
-                0x0800cd30                __aeabi_dcmple
-                0x0800cd44                __aeabi_dcmpge
-                0x0800cd58                __aeabi_dcmpgt
- .text          0x0800cd6c       0x2c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_unorddf2.o)
-                0x0800cd6c                __unorddf2
-                0x0800cd6c                __aeabi_dcmpun
- .text          0x0800cd98       0x50 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_fixdfsi.o)
-                0x0800cd98                __fixdfsi
-                0x0800cd98                __aeabi_d2iz
- .text          0x0800cde8       0x40 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_fixunsdfsi.o)
-                0x0800cde8                __fixunsdfsi
-                0x0800cde8                __aeabi_d2uiz
- .text          0x0800ce28       0xa0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_truncdfsf2.o)
-                0x0800ce28                __truncdfsf2
-                0x0800ce28                __aeabi_d2f
- .text          0x0800cec8       0x30 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_aeabi_uldivmod.o)
-                0x0800cec8                __aeabi_uldivmod
- .text          0x0800cef8       0x30 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_fixdfdi.o)
-                0x0800cef8                __aeabi_d2lz
-                0x0800cef8                __fixdfdi
- .text          0x0800cf28       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_fixunsdfdi.o)
-                0x0800cf28                __fixunsdfdi
-                0x0800cf28                __aeabi_d2ulz
- .text          0x0800cf70      0x2dc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_udivmoddi4.o)
-                0x0800cf70                __udivmoddi4
- .text          0x0800d24c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_dvmd_tls.o)
-                0x0800d24c                __aeabi_idiv0
-                0x0800d24c                __aeabi_ldiv0
+                0x0800c460       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-lseekr.o)
+                0x0800c460                _lseek_r
+ .text._read_r  0x0800c484       0x24 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-readr.o)
+                0x0800c484                _read_r
+ .text          0x0800c4a8       0x18 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_lshrdi3.o)
+                0x0800c4a8                __lshrdi3
+                0x0800c4a8                __aeabi_llsr
+ .text          0x0800c4c0       0x18 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_ashldi3.o)
+                0x0800c4c0                __ashldi3
+                0x0800c4c0                __aeabi_llsl
+ .text          0x0800c4d8      0x370 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_addsubdf3.o)
+                0x0800c4d8                __aeabi_drsub
+                0x0800c4e0                __subdf3
+                0x0800c4e0                __aeabi_dsub
+                0x0800c4e4                __aeabi_dadd
+                0x0800c4e4                __adddf3
+                0x0800c75c                __floatunsidf
+                0x0800c75c                __aeabi_ui2d
+                0x0800c77c                __aeabi_i2d
+                0x0800c77c                __floatsidf
+                0x0800c7a0                __extendsfdf2
+                0x0800c7a0                __aeabi_f2d
+                0x0800c7dc                __floatundidf
+                0x0800c7dc                __aeabi_ul2d
+                0x0800c7ec                __aeabi_l2d
+                0x0800c7ec                __floatdidf
+ .text          0x0800c848      0x424 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_muldivdf3.o)
+                0x0800c848                __aeabi_dmul
+                0x0800c848                __muldf3
+                0x0800ca9c                __divdf3
+                0x0800ca9c                __aeabi_ddiv
+ .text          0x0800cc6c      0x110 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_cmpdf2.o)
+                0x0800cc6c                __gtdf2
+                0x0800cc6c                __gedf2
+                0x0800cc74                __ltdf2
+                0x0800cc74                __ledf2
+                0x0800cc7c                __nedf2
+                0x0800cc7c                __cmpdf2
+                0x0800cc7c                __eqdf2
+                0x0800ccf8                __aeabi_cdrcmple
+                0x0800cd08                __aeabi_cdcmple
+                0x0800cd08                __aeabi_cdcmpeq
+                0x0800cd18                __aeabi_dcmpeq
+                0x0800cd2c                __aeabi_dcmplt
+                0x0800cd40                __aeabi_dcmple
+                0x0800cd54                __aeabi_dcmpge
+                0x0800cd68                __aeabi_dcmpgt
+ .text          0x0800cd7c       0x2c c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_unorddf2.o)
+                0x0800cd7c                __unorddf2
+                0x0800cd7c                __aeabi_dcmpun
+ .text          0x0800cda8       0x50 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_fixdfsi.o)
+                0x0800cda8                __fixdfsi
+                0x0800cda8                __aeabi_d2iz
+ .text          0x0800cdf8       0x40 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_fixunsdfsi.o)
+                0x0800cdf8                __fixunsdfsi
+                0x0800cdf8                __aeabi_d2uiz
+ .text          0x0800ce38       0xa0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_arm_truncdfsf2.o)
+                0x0800ce38                __truncdfsf2
+                0x0800ce38                __aeabi_d2f
+ .text          0x0800ced8       0x30 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_aeabi_uldivmod.o)
+                0x0800ced8                __aeabi_uldivmod
+ .text          0x0800cf08       0x30 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_fixdfdi.o)
+                0x0800cf08                __aeabi_d2lz
+                0x0800cf08                __fixdfdi
+ .text          0x0800cf38       0x48 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_fixunsdfdi.o)
+                0x0800cf38                __fixunsdfdi
+                0x0800cf38                __aeabi_d2ulz
+ .text          0x0800cf80      0x2dc c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_udivmoddi4.o)
+                0x0800cf80                __udivmoddi4
+ .text          0x0800d25c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_dvmd_tls.o)
+                0x0800d25c                __aeabi_idiv0
+                0x0800d25c                __aeabi_ldiv0
  *(.init)
- .init          0x0800d250        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crti.o
-                0x0800d250                _init
- .init          0x0800d254        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtn.o
+ .init          0x0800d260        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crti.o
+                0x0800d260                _init
+ .init          0x0800d264        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtn.o
  *(.fini)
- .fini          0x0800d25c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crti.o
-                0x0800d25c                _fini
- .fini          0x0800d260        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtn.o
+ .fini          0x0800d26c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crti.o
+                0x0800d26c                _fini
+ .fini          0x0800d270        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtn.o
  *crtbegin.o(.ctors)
  *crtbegin?.o(.ctors)
  *(EXCLUDE_FILE(*crtend.o *crtend?.o) .ctors)
@@ -10934,342 +10935,342 @@ LOAD c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/g
  *(.dtors)
  *(.rodata*)
  .rodata._ZL26RangingCorrectionSF5BW0400
-                0x0800d268      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800d278      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF5BW0800
-                0x0800d768      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800d778      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF5BW1600
-                0x0800dc68      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800dc78      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF6BW0400
-                0x0800e168      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800e178      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF6BW0800
-                0x0800e668      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800e678      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF6BW1600
-                0x0800eb68      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800eb78      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF7BW0400
-                0x0800f068      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800f078      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF7BW0800
-                0x0800f568      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800f578      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF7BW1600
-                0x0800fa68      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800fa78      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF8BW0400
-                0x0800ff68      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x0800ff78      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF8BW0800
-                0x08010468      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08010478      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF8BW1600
-                0x08010968      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08010978      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF9BW0400
-                0x08010e68      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08010e78      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF9BW0800
-                0x08011368      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08011378      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL26RangingCorrectionSF9BW1600
-                0x08011868      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08011878      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL27RangingCorrectionSF10BW0400
-                0x08011d68      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08011d78      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL27RangingCorrectionSF10BW0800
-                0x08012268      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012278      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL27RangingCorrectionSF10BW1600
-                0x08012768      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012778      0x500 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF5BW0400
-                0x08012c68       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012c78       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF5BW0800
-                0x08012cc0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012cd0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF5BW1600
-                0x08012d18       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012d28       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF6BW0400
-                0x08012d70       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012d80       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF6BW0800
-                0x08012dc8       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012dd8       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF6BW1600
-                0x08012e20       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012e30       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF7BW0400
-                0x08012e78       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012e88       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF7BW0800
-                0x08012ed0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012ee0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF7BW1600
-                0x08012f28       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012f38       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF8BW0400
-                0x08012f80       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012f90       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF8BW0800
-                0x08012fd8       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08012fe8       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF8BW1600
-                0x08013030       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08013040       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF9BW0400
-                0x08013088       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08013098       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF9BW0800
-                0x080130e0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x080130f0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL34correctionRangingPolynomeSF9BW1600
-                0x08013138       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08013148       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL35correctionRangingPolynomeSF10BW0400
-                0x08013190       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x080131a0       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL35correctionRangingPolynomeSF10BW0800
-                0x080131e8       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x080131f8       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZL35correctionRangingPolynomeSF10BW1600
-                0x08013240       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
+                0x08013250       0x58 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .rodata._ZTV9SX1280Hal
-                0x08013298       0x54 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
-                0x08013298                vtable for SX1280Hal
+                0x080132a8       0x54 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
+                0x080132a8                vtable for SX1280Hal
  .rodata._ZN6SX12804InitEv.str1.1
-                0x080132ec       0x14 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
+                0x080132fc       0x14 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
  .rodata._ZTV6SX1280
-                0x08013300       0x4c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
-                0x08013300                vtable for SX1280
+                0x08013310       0x4c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
+                0x08013310                vtable for SX1280
  .rodata._ZTVN4mbed14BufferedSerialE
-                0x0801334c       0x98 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/BufferedSerial.o
-                0x0801334c                vtable for mbed::BufferedSerial
+                0x0801335c       0x98 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/BufferedSerial.o
+                0x0801335c                vtable for mbed::BufferedSerial
  .rodata._ZTVN4mbed11InterruptInE
-                0x080133e4       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/InterruptIn.o
-                0x080133e4                vtable for mbed::InterruptIn
+                0x080133f4       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/InterruptIn.o
+                0x080133f4                vtable for mbed::InterruptIn
  .rodata._ZTVN4mbed3SPIE
-                0x080133f4       0x20 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/SPI.o
-                0x080133f4                vtable for mbed::SPI
+                0x08013404       0x20 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/SPI.o
+                0x08013404                vtable for mbed::SPI
  .rodata._ZTVN4mbed10SerialBaseE
-                0x08013414       0x18 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/SerialBase.o
-                0x08013414                vtable for mbed::SerialBase
+                0x08013424       0x18 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/SerialBase.o
+                0x08013424                vtable for mbed::SerialBase
  .rodata._ZTVN4mbed6TickerE
-                0x0801342c        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/Ticker.o
-                0x0801342c                vtable for mbed::Ticker
+                0x0801343c        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/Ticker.o
+                0x0801343c                vtable for mbed::Ticker
  .rodata._ZTVN4mbed10TickerBaseE
-                0x08013438        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/Ticker.o
-                0x08013438                vtable for mbed::TickerBase
+                0x08013448        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/Ticker.o
+                0x08013448                vtable for mbed::TickerBase
  .rodata._ZTVN4mbed10TimerEventE
-                0x08013444        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/TimerEvent.o
-                0x08013444                vtable for mbed::TimerEvent
+                0x08013454        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/drivers/source/TimerEvent.o
+                0x08013454                vtable for mbed::TimerEvent
  .rodata.lp_data
-                0x08013450        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_lp_ticker_api.o
+                0x08013460        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_lp_ticker_api.o
  .rodata.lp_interface
-                0x08013458       0x24 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_lp_ticker_api.o
+                0x08013468       0x24 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_lp_ticker_api.o
  .rodata.us_data
-                0x0801347c        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_us_ticker_api.o
+                0x0801348c        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_us_ticker_api.o
  .rodata.us_interface
-                0x08013484       0x24 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_us_ticker_api.o
+                0x08013494       0x24 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/hal/source/mbed_us_ticker_api.o
  .rodata._ZTVN4mbed8internal8SysTimerISt5ratioILx1ELx1000EELb1EEE
-                0x080134a8        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/SysTimer.o
-                0x080134a8                vtable for mbed::internal::SysTimer<std::ratio<1ll, 1000ll>, true>
+                0x080134b8        0xc BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/SysTimer.o
+                0x080134b8                vtable for mbed::internal::SysTimer<std::ratio<1ll, 1000ll>, true>
  .rodata.mbed_fault_handler.str1.1
-                0x080134b4       0x90 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/TARGET_CORTEX_M/mbed_fault_handler.o
+                0x080134c4       0x90 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/TARGET_CORTEX_M/mbed_fault_handler.o
  .rodata.print_context_info.str1.1
-                0x08013544      0x12d BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/TARGET_CORTEX_M/mbed_fault_handler.o
+                0x08013554      0x12d BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/TARGET_CORTEX_M/mbed_fault_handler.o
  .rodata.mbed_error_vprintf.str1.1
-                0x08013671        0x5 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_board.o
- *fill*         0x08013676        0x2 
+                0x08013681        0x5 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_board.o
+ *fill*         0x08013686        0x2 
  .rodata.seconds_before_month
-                0x08013678       0x60 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_mktime.o
+                0x08013688       0x60 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_mktime.o
  .rodata._ZTV12DirectSerial
-                0x080136d8       0x50 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_retarget.o
-                0x080136d8                vtable for DirectSerial
+                0x080136e8       0x50 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_retarget.o
+                0x080136e8                vtable for DirectSerial
  .rodata._ZZL15default_consolevE14console_pinmap
-                0x08013728       0x18 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_retarget.o
+                0x08013738       0x18 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_retarget.o
  .rodata._write.str1.1
-                0x08013740        0x5 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_retarget.o
+                0x08013750        0x5 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/mbed_retarget.o
                                   0x2 (size before relaxing)
  .rodata.int2hex_lower.6516
-                0x08013740       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/minimal-printf/mbed_printf_implementation.o
- .rodata.int2hex_upper.6517
                 0x08013750       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/minimal-printf/mbed_printf_implementation.o
+ .rodata.int2hex_upper.6517
+                0x08013760       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/minimal-printf/mbed_printf_implementation.o
  .rodata.CSWTCH.52
-                0x08013760        0x4 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/STM32L4xx_HAL_Driver/stm32l4xx_hal_uart.o
+                0x08013770        0x4 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/STM32L4xx_HAL_Driver/stm32l4xx_hal_uart.o
  .rodata.CSWTCH.53
-                0x08013764        0xd BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/STM32L4xx_HAL_Driver/stm32l4xx_hal_uart.o
+                0x08013774        0xd BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/STM32L4xx_HAL_Driver/stm32l4xx_hal_uart.o
  .rodata.AHBPrescTable
-                0x08013771       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/system_stm32l4xx.o
-                0x08013771                AHBPrescTable
+                0x08013781       0x10 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/system_stm32l4xx.o
+                0x08013781                AHBPrescTable
  .rodata.APBPrescTable
-                0x08013781        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/system_stm32l4xx.o
-                0x08013781                APBPrescTable
- *fill*         0x08013789        0x3 
+                0x08013791        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/system_stm32l4xx.o
+                0x08013791                APBPrescTable
+ *fill*         0x08013799        0x3 
  .rodata.MSIRangeTable
-                0x0801378c       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/system_stm32l4xx.o
-                0x0801378c                MSIRangeTable
+                0x0801379c       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/STM32Cube_FW/system_stm32l4xx.o
+                0x0801379c                MSIRangeTable
  .rodata.PinMap_SPI_MISO
-                0x080137bc       0x3c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
-                0x080137bc                PinMap_SPI_MISO
+                0x080137cc       0x3c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
+                0x080137cc                PinMap_SPI_MISO
  .rodata.PinMap_SPI_MOSI
-                0x080137f8       0x3c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
-                0x080137f8                PinMap_SPI_MOSI
+                0x08013808       0x3c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
+                0x08013808                PinMap_SPI_MOSI
  .rodata.PinMap_SPI_SCLK
-                0x08013834       0x3c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
-                0x08013834                PinMap_SPI_SCLK
+                0x08013844       0x3c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
+                0x08013844                PinMap_SPI_SCLK
  .rodata.PinMap_SPI_SSEL
-                0x08013870       0x48 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
-                0x08013870                PinMap_SPI_SSEL
+                0x08013880       0x48 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
+                0x08013880                PinMap_SPI_SSEL
  .rodata.PinMap_UART_RX
-                0x080138b8       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
-                0x080138b8                PinMap_UART_RX
+                0x080138c8       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
+                0x080138c8                PinMap_UART_RX
  .rodata.PinMap_UART_TX
-                0x080138e8       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
-                0x080138e8                PinMap_UART_TX
+                0x080138f8       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/TARGET_NUCLEO_L432KC/PeripheralPins.o
+                0x080138f8                PinMap_UART_TX
  .rodata.SetSysClock.str1.1
-                0x08013918       0x14 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/system_clock.o
+                0x08013928       0x14 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L432xC/system_clock.o
  .rodata.pin_lines_desc
-                0x0801392c       0xc0 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/gpio_irq_device.o
-                0x0801392c                pin_lines_desc
+                0x0801393c       0xc0 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/gpio_irq_device.o
+                0x0801393c                pin_lines_desc
  .rodata.spi_get_clock_freq.str1.1
-                0x080139ec       0x1a BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/spi_api.o
+                0x080139fc       0x1a BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/TARGET_STM32L4/spi_api.o
  .rodata.Set_GPIO_Clock.str1.1
-                0x08013a06       0x21 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/gpio_api.o
+                0x08013a16       0x21 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/gpio_api.o
  .rodata.gpio_irq_init.str1.1
-                0x08013a27       0x27 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/gpio_irq_api.o
+                0x08013a37       0x27 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/gpio_irq_api.o
  .rodata.handle_interrupt_in.str1.1
-                0x08013a4e       0x29 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/gpio_irq_api.o
- *fill*         0x08013a77        0x1 
+                0x08013a5e       0x29 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/gpio_irq_api.o
+ *fill*         0x08013a87        0x1 
  .rodata.info.17150
-                0x08013a78        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/lp_ticker.o
+                0x08013a88        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/lp_ticker.o
  .rodata.lp_ticker_init.str1.1
-                0x08013a80       0x50 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/lp_ticker.o
+                0x08013a90       0x50 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/lp_ticker.o
  .rodata.ll_pin_defines
-                0x08013ad0       0x40 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/pinmap.o
-                0x08013ad0                ll_pin_defines
+                0x08013ae0       0x40 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/pinmap.o
+                0x08013ae0                ll_pin_defines
  .rodata.rtc_init.str1.1
-                0x08013b10       0x7e BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/rtc_api.o
+                0x08013b20       0x7e BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/rtc_api.o
  .rodata.rtc_write.str1.1
-                0x08013b8e       0x2e BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/rtc_api.o
+                0x08013b9e       0x2e BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/rtc_api.o
  .rodata.serial_format.str1.1
-                0x08013bbc       0x5d BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/serial_api.o
+                0x08013bcc       0x5d BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/serial_api.o
  .rodata.serial_init.str1.1
-                0x08013c19       0x35 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/serial_api.o
+                0x08013c29       0x35 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/serial_api.o
  .rodata.hal_deepsleep.str1.1
-                0x08013c4e       0x4d BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/sleep.o
- *fill*         0x08013c9b        0x1 
+                0x08013c5e       0x4d BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/sleep.o
+ *fill*         0x08013cab        0x1 
  .rodata.baudrate_prescaler_table
-                0x08013c9c       0x20 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/stm_spi_api.o
+                0x08013cac       0x20 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/stm_spi_api.o
  .rodata.init_spi.str1.1
-                0x08013cbc       0x16 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/stm_spi_api.o
- *fill*         0x08013cd2        0x2 
+                0x08013ccc       0x16 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/stm_spi_api.o
+ *fill*         0x08013ce2        0x2 
  .rodata.info.15392
-                0x08013cd4        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
+                0x08013ce4        0x8 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
  .rodata._Z25EepromLoadGeneralSettingsv.str1.1
-                0x08013cdc       0x18 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
- .rodata        0x08013cf4        0x2 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- *fill*         0x08013cf6        0x2 
+                0x08013cec       0x18 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
+ .rodata        0x08013d04        0x2 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ *fill*         0x08013d06        0x2 
  .rodata.CSWTCH.138
-                0x08013cf8       0x14 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013d08       0x14 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata.CSWTCH.139
-                0x08013d0c       0x40 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013d1c       0x40 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata.CSWTCH.141
-                0x08013d4c       0x1c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013d5c       0x1c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._GLOBAL__sub_I_StringText.str1.1
-                0x08013d68      0x120 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013d78      0x120 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z11OnRxTimeoutv.str1.1
-                0x08013e88       0x12 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013e98       0x12 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z11onRangingRxP8FSMState.str1.1
-                0x08013e9a       0x19 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013eaa       0x19 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z13CheckDistancev.str1.1
-                0x08013eb3       0xb1 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013ec3       0xb1 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z13OnRangingDone16IrqRangingCode_t.str1.1
-                0x08013f64       0x16 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013f74       0x16 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z13processSerialv.str1.1
-                0x08013f7a       0x18 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013f8a       0x18 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
                                  0x1d (size before relaxing)
  .rodata._Z16onPrepareRangingP8FSMState.str1.1
-                0x08013f92       0x18 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013fa2       0x18 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
                                   0x5 (size before relaxing)
  .rodata._Z17onRequestReceivedP8FSMState.str1.1
-                0x08013f92       0x26 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013fa2       0x26 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z20GetRadioFrequencyGHzv.str1.1
-                0x08013fb8        0xd BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013fc8        0xd BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z20onWaitRangingRequestP8FSMState.str1.1
-                0x08013fc5       0x1c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013fd5       0x1c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z21displayRangingAddressPh.str1.1
-                0x08013fe1       0x1f BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08013ff1       0x1f BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z23configureRangingRequestv.str1.1
-                0x08014000       0x1f BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08014010       0x1f BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z24InitializeDemoParametersh.str1.1
-                0x0801401f       0x1b BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0801402f       0x1b BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z29GetRadioModulationParameters1v.str1.1
-                0x0801403a      0x18b BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0801404a      0x18b BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
                                 0x18e (size before relaxing)
  .rodata._Z29GetRadioModulationParameters2v.str1.1
-                0x080141c5       0x2c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x080141d5       0x2c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z29GetRadioModulationParameters3v.str1.1
-                0x080141f1       0x13 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08014201       0x13 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._Z6onIdleP8FSMState.str1.1
-                0x08014204       0x19 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- *fill*         0x0801421d        0x1 
+                0x08014214       0x19 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ *fill*         0x0801422d        0x1 
  .rodata._ZL14RNG_CALIB_0400
-                0x0801421e        0xc BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0801422e        0xc BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._ZL14RNG_CALIB_0800
-                0x0801422a        0xc BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x0801423a        0xc BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._ZL14RNG_CALIB_1600
-                0x08014236        0xc BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- *fill*         0x08014242        0x6 
+                0x08014246        0xc BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ *fill*         0x08014252        0x6 
  .rodata._ZL14RNG_FGRAD_0400
-                0x08014248       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08014258       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._ZL14RNG_FGRAD_0800
-                0x08014278       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08014288       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._ZL14RNG_FGRAD_1600
-                0x080142a8       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x080142b8       0x30 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._ZL8Channels
-                0x080142d8       0xa0 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x080142e8       0xa0 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata._ZN3FSM3runEv.str1.1
-                0x08014378       0x33 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                0x08014388       0x33 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .rodata.str1.1
-                0x080143ab      0x11a BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- *fill*         0x080144c5        0x3 
+                0x080143bb      0x11a BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ *fill*         0x080144d5        0x3 
  .rodata.RNG_ADDR_LIST
-                0x080144c8       0x20 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
-                0x080144c8                RNG_ADDR_LIST
+                0x080144d8       0x20 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+                0x080144d8                RNG_ADDR_LIST
  .rodata._Z26PrintCompileSupportMessagev.str1.1
-                0x080144e8       0x85 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+                0x080144f8       0x85 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
  .rodata.main.str1.1
-                0x0801456d      0x13e BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
- *fill*         0x080146ab        0x1 
+                0x0801457d      0x13e BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+ *fill*         0x080146bb        0x1 
  .rodata.pow.str1.4
-                0x080146ac        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-w_pow.o)
+                0x080146bc        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-w_pow.o)
  .rodata.__ieee754_pow.str1.4
-                0x080146b0        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-e_pow.o)
+                0x080146c0        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-e_pow.o)
                                   0x1 (size before relaxing)
- *fill*         0x080146b4        0x4 
- .rodata.TWO52  0x080146b8       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_rint.o)
+ *fill*         0x080146c4        0x4 
+ .rodata.TWO52  0x080146c8       0x10 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libm.a(lib_a-s_rint.o)
  .rodata.__sf_fake_stderr
-                0x080146c8       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x080146c8                __sf_fake_stderr
+                0x080146d8       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x080146d8                __sf_fake_stderr
  .rodata.__sf_fake_stdin
-                0x080146e8       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x080146e8                __sf_fake_stdin
+                0x080146f8       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x080146f8                __sf_fake_stdin
  .rodata.__sf_fake_stdout
-                0x08014708       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
-                0x08014708                __sf_fake_stdout
+                0x08014718       0x20 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-findfp.o)
+                0x08014718                __sf_fake_stdout
  .rodata._global_impure_ptr
-                0x08014728        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-impure.o)
-                0x08014728                _global_impure_ptr
+                0x08014738        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp\libc_nano.a(lib_a-impure.o)
+                0x08014738                _global_impure_ptr
  *(.eh_frame*)
- .eh_frame      0x0801472c        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
- .eh_frame      0x0801472c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtend.o
+ .eh_frame      0x0801473c        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
+ .eh_frame      0x0801473c        0x4 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtend.o
 
-.glue_7         0x08014730        0x0
- .glue_7        0x08014730        0x0 linker stubs
+.glue_7         0x08014740        0x0
+ .glue_7        0x08014740        0x0 linker stubs
 
-.glue_7t        0x08014730        0x0
- .glue_7t       0x08014730        0x0 linker stubs
+.glue_7t        0x08014740        0x0
+ .glue_7t       0x08014740        0x0 linker stubs
 
-.vfp11_veneer   0x08014730        0x0
- .vfp11_veneer  0x08014730        0x0 linker stubs
+.vfp11_veneer   0x08014740        0x0
+ .vfp11_veneer  0x08014740        0x0 linker stubs
 
-.v4_bx          0x08014730        0x0
- .v4_bx         0x08014730        0x0 linker stubs
+.v4_bx          0x08014740        0x0
+ .v4_bx         0x08014740        0x0 linker stubs
 
-.iplt           0x08014730        0x0
- .iplt          0x08014730        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
+.iplt           0x08014740        0x0
+ .iplt          0x08014740        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
-                0x08014730                __exidx_start = .
+                0x08014740                __exidx_start = .
 
-.ARM.exidx      0x08014730        0x8
+.ARM.exidx      0x08014740        0x8
  *(.ARM.exidx* .gnu.linkonce.armexidx.*)
- .ARM.exidx     0x08014730        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/crt0.o
- .ARM.exidx     0x08014738        0x0 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/TARGET_CORTEX_M/TOOLCHAIN_GCC/except.o
+ .ARM.exidx     0x08014740        0x8 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/crt0.o
+ .ARM.exidx     0x08014748        0x0 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/platform/source/TARGET_CORTEX_M/TOOLCHAIN_GCC/except.o
                                  0x28 (size before relaxing)
- .ARM.exidx     0x08014738        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_udivmoddi4.o)
+ .ARM.exidx     0x08014748        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp\libgcc.a(_udivmoddi4.o)
                                   0x8 (size before relaxing)
-                0x08014738                __exidx_end = .
-                0x08014738                __etext = .
-                0x08014738                _sidata = .
+                0x08014748                __exidx_end = .
+                0x08014748                __etext = .
+                0x08014748                _sidata = .
 
-.rel.dyn        0x08014738        0x0
- .rel.iplt      0x08014738        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
+.rel.dyn        0x08014748        0x0
+ .rel.iplt      0x08014748        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
 
-.data           0x20000190      0x268 load address 0x08014738
+.data           0x20000190      0x268 load address 0x08014748
                 0x20000190                __data_start__ = .
                 0x20000190                _sdata = .
  *(vtable)
@@ -11352,10 +11353,10 @@ LOAD c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/g
                 0x200003f8                __data_end__ = .
                 0x200003f8                _edata = .
 
-.igot.plt       0x200003f8        0x0 load address 0x080149a0
+.igot.plt       0x200003f8        0x0 load address 0x080149b0
  .igot.plt      0x200003f8        0x0 c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/gcc/arm-none-eabi/6.3.1/thumb/v7e-m/fpv4-sp/softfp/crtbegin.o
 
-.uninitialized  0x200003f8        0x8 load address 0x080149a0
+.uninitialized  0x200003f8        0x8 load address 0x080149b0
                 0x20000400                . = ALIGN (0x20)
  *fill*         0x200003f8        0x8 
                 0x20000400                __uninitialized_start = .
@@ -11364,7 +11365,7 @@ LOAD c:/program files (x86)/gnu tools arm embedded/6 2017-q2-update/bin/../lib/g
                 0x20000400                . = ALIGN (0x20)
                 0x20000400                __uninitialized_end = .
 
-.bss            0x20000400     0x1cc8 load address 0x080149a8
+.bss            0x20000400     0x1cc8 load address 0x080149b8
                 0x20000400                . = ALIGN (0x8)
                 0x20000400                __bss_start__ = .
                 0x20000400                _sbss = .
@@ -12012,7 +12013,7 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Master.elf elf32-littlearm)
  .comment       0x0000007f       0x80 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .comment       0x0000007f       0x80 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
-.debug_info     0x00000000    0xd4edf
+.debug_info     0x00000000    0xd4ee4
  .debug_info    0x00000000     0x495c BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .debug_info    0x0000495c     0x8ac5 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
  .debug_info    0x0000d421     0x88d1 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
@@ -12090,8 +12091,8 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Master.elf elf32-littlearm)
  .debug_info    0x000b66bf     0x1334 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
  .debug_info    0x000b79f3     0x54a2 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
  .debug_info    0x000bce95     0x57f2 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Timers.o
- .debug_info    0x000c2687     0xc4b3 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- .debug_info    0x000ceb3a     0x63a5 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+ .debug_info    0x000c2687     0xc4b8 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ .debug_info    0x000ceb3f     0x63a5 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
 .debug_abbrev   0x00000000    0x18ac2
  .debug_abbrev  0x00000000      0x825 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
@@ -12407,7 +12408,7 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Master.elf elf32-littlearm)
  .debug_aranges
                 0x00003140       0x48 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
-.debug_ranges   0x00000000     0x4dd8
+.debug_ranges   0x00000000     0x4de8
  .debug_ranges  0x00000000       0x30 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .debug_ranges  0x00000030      0x210 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
  .debug_ranges  0x00000240      0x248 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
@@ -12482,10 +12483,10 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Master.elf elf32-littlearm)
  .debug_ranges  0x00004158       0x88 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
  .debug_ranges  0x000041e0       0x78 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
  .debug_ranges  0x00004258       0xb8 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Timers.o
- .debug_ranges  0x00004310      0xa48 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- .debug_ranges  0x00004d58       0x80 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+ .debug_ranges  0x00004310      0xa58 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ .debug_ranges  0x00004d68       0x80 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
-.debug_line     0x00000000    0x26f24
+.debug_line     0x00000000    0x26f29
  .debug_line    0x00000000      0xd45 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .debug_line    0x00000d45     0x124f BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
  .debug_line    0x00001f94     0x118e BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
@@ -12563,8 +12564,8 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Master.elf elf32-littlearm)
  .debug_line    0x000224e5      0x407 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
  .debug_line    0x000228ec      0xf1a BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
  .debug_line    0x00023806      0xd0e BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Timers.o
- .debug_line    0x00024514     0x1b4c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- .debug_line    0x00026060      0xec4 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+ .debug_line    0x00024514     0x1b51 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ .debug_line    0x00026065      0xec4 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
 .debug_str      0x00000000    0x2b175
  .debug_str     0x00000000     0x4175 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o

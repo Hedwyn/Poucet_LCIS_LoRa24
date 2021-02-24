@@ -28,6 +28,10 @@ Maintainer: Gregory Cristian, Gilbert Menth & Matthieu Verdy
 #define INT(_FLOAT) (trunc(_FLOAT))
 #define DEC(_FLOAT) (FLOAT_EXPONENT * fabs(_FLOAT - INT(_FLOAT)) )
 
+#if (!defined(NUCLEO_L432KC) && !defined(NUCLEO_L476RG))
+  #define NUCLEO_L432KC
+#endif
+
 
 extern int slave_index;
 extern BufferedSerial pc;

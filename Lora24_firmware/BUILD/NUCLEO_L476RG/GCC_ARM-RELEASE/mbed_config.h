@@ -72,6 +72,7 @@
 #define MBED_CONF_TARGET_CUSTOM_TICKERS                                   1                  // set by target:Target
 #define MBED_CONF_TARGET_DEEP_SLEEP_LATENCY                               4                  // set by target:MCU_STM32
 #define MBED_CONF_TARGET_DEFAULT_ADC_VREF                                 NAN                // set by target:Target
+#define MBED_CONF_TARGET_GPIO_RESET_AT_INIT                               0                  // set by target:MCU_STM32
 #define MBED_CONF_TARGET_INIT_US_TICKER_AT_BOOT                           1                  // set by target:MCU_STM32
 #define MBED_CONF_TARGET_INTERNAL_FLASH_UNIFORM_SECTORS                   1                  // set by target:Target
 #define MBED_CONF_TARGET_LPTICKER_LPTIM                                   1                  // set by target:MCU_STM32L4

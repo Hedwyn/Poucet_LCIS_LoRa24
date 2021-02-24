@@ -6,6 +6,7 @@
     ],
     "macros": [
         "DEVICE_ID=1",
+        "NUCLEO_L432KC",
         "TOTAL_SLAVES=1"
     ],
     "symbols": [
@@ -13,6 +14,7 @@
         "DEVICE_ID=1",
         "EXTRA_IDLE_STACK_REQUIRED",
         "MBED_TICKLESS",
+        "NUCLEO_L432KC",
         "STM32L432xx",
         "TOTAL_SLAVES=1",
         "TRANSACTION_QUEUE_SIZE_SPI=2",

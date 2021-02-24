@@ -14,6 +14,7 @@ class Os(Enum):
 local_os = Os.WIN
 
 DEVICE_MODEL = 'NODE_L432KC'
+DEVICE_MODELS = ['L432KC', 'L476RG']
 MAKE_CALL = "make all BIN="
 BIN_EXTENSION = ".bin"
 MASTER_BIN_PREFIX = "Master"
@@ -32,6 +33,7 @@ DEVICE_ID_MACRO_NAME = "DEVICE_ID"
 TOTAL_SLAVES_MACRO_NAME = "TOTAL_SLAVES" 
 FIRMWARE_DIR = "Firmware"
 TARGET = "NUCLEO_L432KC"
+TARGETS = ["NUCLEO_L432KC", "NUCLEO_L476RG"]
 TOOLCHAIN = "GCC_ARM"
 PROJECT_NAME = "SX1280"
 
@@ -80,11 +82,15 @@ def build_drivers(config, clean = False):
     print(cmd)
     call_cmd(cmd)
 
-def compile(id, total_slaves, config, flash = False, clean =  False):
+def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean =  False):
+    if total_slaves == 0:
+        total_slaves = 1
     cmd = MBED_COMPILE + ' '
     release_name = (TOOLCHAIN + "-" + config.profile.upper())  if config.profile else TOOLCHAIN
-    static_libs_path = "BUILD/" + "libraries" + "/" + PROJECT_NAME + "/" + TARGET + "/" + release_name
+    static_libs_path = "BUILD/" + "libraries" + "/" + PROJECT_NAME + "/" + target + "/" + release_name
     print(static_libs_path)
+    if total_slaves == 0:
+        tptam_slaves = 1
     if clean:
         cmd += "-c"
     for lib in config.project_libs:
@@ -96,8 +102,14 @@ def compile(id, total_slaves, config, flash = False, clean =  False):
         print("OS and drivers have not been built yet. Proceeding to build them.")
         build_drivers(config, clean)
 
+    # setting the target
+    cmd += " --target " + target
+    cmd += " -D" + target
+
     # defining the device ID and the total number of slaves
     cmd += " -D" + DEVICE_ID_MACRO_NAME + "=" + str(id) + " -D" + TOTAL_SLAVES_MACRO_NAME + "=" + str(total_slaves)
+
+    
 
     # defining the binary name
     bin_name = "Master" if id == 0 else ("Slave" + str(id))
@@ -112,7 +124,7 @@ def compile(id, total_slaves, config, flash = False, clean =  False):
 
     # copying compiled binary to the firmware directory
     
-    copyfile("BUILD/" + TARGET + "/" + release_name + "/" + bin_name + ".bin", FIRMWARE_DIR + "/" + bin_name + ".bin" )
+    copyfile("BUILD/" + target + "/" + release_name + "/" + bin_name + ".bin", FIRMWARE_DIR + "/" + bin_name + ".bin" )
     # try:
     #     copyfile("BUILD/" + release_name + "/" + PROJECT_NAME + ".bin", FIRMWARE_DIR + "/" + bin_name )
     # except:
@@ -169,7 +181,7 @@ def flash_all_devices(devices_paths = None, bin_names = None):
             flash_device(device_path, bin_name)
 
 
-def is_drive_stm32(drive, device_model = DEVICE_MODEL):
+def is_drive_stm32(drive, device_models = DEVICE_MODELS):
     if (local_os != Os.WIN):
         print("The drive name can only be checked on Windows")
     else:  
@@ -179,16 +191,21 @@ def is_drive_stm32(drive, device_model = DEVICE_MODEL):
         for char in drive_info:
             decoded_char =  chr(char)
             drive_info_utf8 += decoded_char
-        return(device_model in drive_info_utf8)
+        for device in device_models:
+            if device in drive_info_utf8:
+                return("NUCLEO_" + device)
+        return(False)
 
 
-def get_drives_win(device_model = DEVICE_MODEL):
+def get_drives_win(device_models = DEVICE_MODELS):
     if (local_os != Os.WIN):
         print("The drives can only be detected on Windows")
     else:
         drives = ['%s:' % d for d in string.ascii_uppercase if os.path.exists('%s:' % d)]
-        stm32_list = [drive for drive in drives if is_drive_stm32(drive)]
+        stm32_list = [drive for drive in drives if is_drive_stm32(drive, device_models)]
         return(stm32_list)
+
+
 
 def associate_bins_to_drives(ordering_list = None):
     if (local_os != Os.WIN):
@@ -205,78 +222,41 @@ def associate_bins_to_drives(ordering_list = None):
         bin_names = gen_bin_names(devices_number)
 
     for bin_name, stm32 in zip(bin_names, stm32_list):
-        drive_to_bin_dic[stm32] = bin_name
+        target = is_drive_stm32(stm32)
+        print(target)
+        drive_to_bin_dic[stm32] = bin_name, target
     return(drive_to_bin_dic)
-
-# def deployment(ordering_list = None, total_slaves):
-#     drive_to_bin_dic = associate_bins_to_drives(ordering_list)
-#     devices_path = []
-#     bin_names = []
-#     total_slaves = len(drive_to_bin_dic) - 1
-#     slaves_number_flag = "TOTAL_SLAVES=" + str(total_slaves)
-#     for drive in drive_to_bin_dic:
-#         bin_name = drive_to_bin_dic[drive]
-#         # compile(bin_name, total_slaves = flags = slaves_number_flag)
-#         devices_path.append(drive)
-#         bin_names.append(bin_name)
-#         clean_objs()
-#     print(devices_path)
-#     flash_all_devices(devices_path, bin_names)
 
 def deploy(build_config_path = BUILD_CONFIG_PATH, ordering_list = None, total_slaves = None):
     drive_to_bin_dic = associate_bins_to_drives(ordering_list)
     devices_path = [drive for drive in drive_to_bin_dic]
-    bin_names = [drive_to_bin_dic[drive] + BIN_EXTENSION for drive in drive_to_bin_dic]
+    bin_names = [drive_to_bin_dic[drive][0] + BIN_EXTENSION for drive in drive_to_bin_dic]
+    targets = [drive_to_bin_dic[drive][1] for drive in drive_to_bin_dic]
     total_devices = len(devices_path)
     project_conf = parse_build_config(build_config_path)
     print(bin_names, devices_path)
     # compiling firmware, one binary for each device
-    n_compile(project_conf, total_devices, total_slaves)
+    n_compile(project_conf, total_devices, targets, total_slaves)
     
 
     # flashing them all
     flash_all_devices(devices_path, bin_names)
 
-def n_compile(project_conf, n, total_slaves = None):
+def n_compile(project_conf, n, targets = None, total_slaves = None):
     if not total_slaves:
         # substracting master (id 0) from the slaves count
         total_slaves = n - 1
     for i in range(n):
-        compile(i, total_slaves, project_conf)
+        if targets:
+            compile(i, total_slaves, project_conf, target = targets[i])
+        else:
+            compile(i, total_slaves, project_conf)
 
 
 
         
 
 if __name__ == "__main__":
-    # argc = len(sys.argv)
-    # ordering_list = None
-    # no_compile = False
-    # if argc > 1:
-    #     for arg in sys.argv[1:]:
-    #         # checking flags
-    #         if arg[0] == "-":
-    #             flag = arg[1]
-    #             if (flag == 'o'):
-    #                 order_flag = True
-    #                 if len(arg) == 2:
-    #                     print("You must provide the ordered list of drives you want to flash after the -o flag")
-    #                 else:
-    #                     ordering_list = arg[2:]
-    #             elif (flag == 'f'):
-    #                 print("Flashing only")
-    #                 no_compile = True
-    #                 flash_all_devices()
-    #             elif (flag == 'h'):
-    #                 print("Usage: -o or -order to specify the order of drives to flash")
-
-    # # launching deployment
-    # if not(no_compile):
-    #     deployment(ordering_list)
-    
-    # build_drivers(project_conf)
-    # compile(1,1, project_conf)
-    # compile(0,1, project_conf)
     argc = len(sys.argv)
 
     # default arguments 

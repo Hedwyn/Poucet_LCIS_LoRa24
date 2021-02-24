@@ -2,10 +2,10 @@
     {
         "module": "NUCLEO_L432KC\\GCC_ARM-RELEASE",
         "size": {
-            ".text": 8032,
+            ".text": 8044,
             ".data": 46,
             ".bss": 4661,
-            ".text-delta": -12,
+            ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -13,10 +13,10 @@
     {
         "module": "[fill]",
         "size": {
-            ".text": 84,
+            ".text": 88,
             ".data": 13,
             ".bss": 41,
-            ".text-delta": -4,
+            ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -80,8 +80,8 @@
         "summary": {
             "static_ram": 7968,
             "static_ram_delta": 0,
-            "total_flash": 54440,
-            "total_flash_delta": -16
+            "total_flash": 54456,
+            "total_flash_delta": 0
         }
     }
 ]

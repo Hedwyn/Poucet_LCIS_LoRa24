@@ -12487,7 +12487,7 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Slave1.elf elf32-littlearm)
  .debug_ranges  0x00004310      0xa58 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
  .debug_ranges  0x00004d68       0x80 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
-.debug_line     0x00000000    0x26f29
+.debug_line     0x00000000    0x26f2e
  .debug_line    0x00000000      0xd45 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
  .debug_line    0x00000d45     0x124f BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
  .debug_line    0x00001f94     0x118e BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280.o
@@ -12565,10 +12565,10 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Slave1.elf elf32-littlearm)
  .debug_line    0x000224e5      0x407 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
  .debug_line    0x000228ec      0xf1a BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
  .debug_line    0x00023806      0xd0e BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Timers.o
- .debug_line    0x00024514     0x1b4c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
- .debug_line    0x00026060      0xec9 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+ .debug_line    0x00024514     0x1b51 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+ .debug_line    0x00026065      0xec9 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
 
-.debug_str      0x00000000    0x2b12f
+.debug_str      0x00000000    0x2b175
  .debug_str     0x00000000     0x4175 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o
                                0x46c6 (size before relaxing)
  .debug_str     0x00004175     0x28b1 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/sx1280-hal.o
@@ -12715,14 +12715,14 @@ OUTPUT(./BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Slave1.elf elf32-littlearm)
                                0x1f2b (size before relaxing)
  .debug_str     0x00028860       0xfe BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/mbed-os/targets/TARGET_STM/us_ticker.o
                                0x11fc (size before relaxing)
- .debug_str     0x0002895e      0x60c BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
-                               0x5415 (size before relaxing)
- .debug_str     0x00028f6a      0x4ce BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Timers.o
-                               0x5653 (size before relaxing)
- .debug_str     0x00029438     0x1b97 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
-                               0x9bad (size before relaxing)
- .debug_str     0x0002afcf      0x160 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
-                               0x5d11 (size before relaxing)
+ .debug_str     0x0002895e      0x652 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Eeprom.o
+                               0x5427 (size before relaxing)
+ .debug_str     0x00028fb0      0x4ce BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Peripherals/Timers.o
+                               0x5665 (size before relaxing)
+ .debug_str     0x0002947e     0x1b97 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/Utils/Utils.o
+                               0x9bbf (size before relaxing)
+ .debug_str     0x0002b015      0x160 BUILD/NUCLEO_L432KC/GCC_ARM-RELEASE/main/main.o
+                               0x5d23 (size before relaxing)
 
 .debug_frame    0x00000000     0x97b0
  .debug_frame   0x00000000       0x48 BUILD/libraries/SX1280/NUCLEO_L432KC/GCC_ARM-RELEASE/SX1280Lib/RangingCorrection.o

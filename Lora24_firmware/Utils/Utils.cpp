@@ -84,8 +84,13 @@ RadioCallbacks_t Callbacks =
  * \brief Define IO and callbacks for radio
  * 			      mosi,miso,sclk,nss,busy,dio1,dio2,dio3,rst,callbacks
  */
-// SX1280Hal Radio( D11, D12, D13, D10, D7, D9, NC, NC, A0, &Callbacks ); // L432_KC
-SX1280Hal Radio( D11, D12, D13, D7, D3, D5, NC, NC, A0, &Callbacks );
+
+
+#ifdef NUCLEO_L432KC
+    SX1280Hal Radio( D11, D12, D13, D10, D7, D9, NC, NC, A0, &Callbacks ); // L432_KC
+#else // NUCLEO_476RG
+    SX1280Hal Radio( D11, D12, D13, D7, D3, D5, NC, NC, A0, &Callbacks );
+#endif
 
 /*!
  * \brief Control the Antenna Diversity switch

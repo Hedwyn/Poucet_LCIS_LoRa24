@@ -2,9 +2,9 @@
     {
         "module": "NUCLEO_L432KC\\GCC_ARM-RELEASE",
         "size": {
-            ".text": 7612,
+            ".text": 8052,
             ".data": 50,
-            ".bss": 4628,
+            ".bss": 4657,
             ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
@@ -13,9 +13,9 @@
     {
         "module": "[fill]",
         "size": {
-            ".text": 86,
+            ".text": 88,
             ".data": 9,
-            ".bss": 34,
+            ".bss": 37,
             ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
@@ -35,7 +35,7 @@
     {
         "module": "[lib]\\gcc.a",
         "size": {
-            ".text": 3352,
+            ".text": 3512,
             ".data": 0,
             ".bss": 0,
             ".text-delta": 0,
@@ -46,7 +46,7 @@
     {
         "module": "[lib]\\m.a",
         "size": {
-            ".text": 4580,
+            ".text": 4616,
             ".data": 1,
             ".bss": 0,
             ".text-delta": 0,
@@ -68,7 +68,7 @@
     {
         "module": "libraries\\SX1280",
         "size": {
-            ".text": 34690,
+            ".text": 34724,
             ".data": 436,
             ".bss": 2626,
             ".text-delta": 0,
@@ -78,9 +78,9 @@
     },
     {
         "summary": {
-            "static_ram": 7928,
+            "static_ram": 7960,
             "static_ram_delta": 0,
-            "total_flash": 53792,
+            "total_flash": 54464,
             "total_flash_delta": 0
         }
     }
