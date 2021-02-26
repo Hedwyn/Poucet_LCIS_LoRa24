@@ -5,5 +5,5 @@
      "Regular compilations will NOT rebuilt the libraries given in Drivers. if you want to re-build the drivers, please proceed to a clean build (See Documentation) "
     ]
 }
-{"OS": "mbed-os", "Drivers":["SX1280Lib"], "ProjectLibs": ["RangingDemo"], "Default build profile": "Debug"}
+{"OS": "mbed-os", "Drivers":["SX1280Lib"], "ProjectLibs": ["RangingDemo"], "Default build profile": "release"}
 

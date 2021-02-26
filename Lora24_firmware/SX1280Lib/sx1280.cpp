@@ -143,6 +143,33 @@ void SX1280::SetRx( TickTime_t timeout )
     OperatingMode = MODE_RX;
 }
 
+void SX1280::SetAdvancedRanging(TickTime_t timeout )
+{
+    uint8_t buf[3];
+    uint8_t role;
+    SetRangingRole( RADIO_RANGING_ROLE_SLAVE );
+    role = ADVANCED_RANGING_ROLE;
+    WriteCommand(RADIO_SET_ADVANCED_RANGING, &role, 1); 
+    buf[0] = timeout.PeriodBase;
+    buf[1] = ( uint8_t )( ( timeout.PeriodBaseCount >> 8 ) & 0x00FF );
+    buf[2] = ( uint8_t )( timeout.PeriodBaseCount & 0x00FF );
+
+    ClearIrqStatus( IRQ_RADIO_ALL );
+    WriteCommand( RADIO_SET_RX, buf, 3 );
+    OperatingMode = MODE_RX;
+    AdvancedRangingOn = true;
+}
+
+void SX1280::DisableAdvancedRanging()
+{
+    SetStandby(STDBY_RC);
+    ClearIrqStatus(0xFFFF);
+    uint8_t command = 0;
+    WriteCommand(RADIO_SET_ADVANCED_RANGING, &command, 1); 
+    AdvancedRangingOn = false;
+}
+
+
 void SX1280::SetRxDutyCycle( RadioTickSizes_t periodBase, uint16_t periodBaseCountRx, uint16_t periodBaseCountSleep )
 {
     uint8_t buf[5];
@@ -811,6 +838,41 @@ double SX1280::GetRangingResult( RadioRangingResultTypes_t resultType )
     return val;
 }
 
+double SX1280::GetAdvancedRangingResult( RadioRangingResultTypes_t resultType )
+{
+    uint32_t valLsb = 0;
+    double val = 0.0;
+    this->SetStandby( STDBY_XOSC );
+    this->WriteRegister( 0x97F, this->ReadRegister( 0x97F ) | ( 1 << 1 ) ); // enable LORA modem clock
+    WriteRegister( REG_LR_RANGINGRESULTCONFIG, ( ReadRegister( REG_LR_RANGINGRESULTCONFIG ) & MASK_RANGINGMUXSEL ) | ( ( ( ( uint8_t )resultType ) & 0x03 ) << 4 ) );
+    valLsb = ( ( ReadRegister( REG_LR_RANGINGRESULTBASEADDR ) << 16 ) | ( ReadRegister( REG_LR_RANGINGRESULTBASEADDR + 1 ) << 8 ) | ( ReadRegister( REG_LR_RANGINGRESULTBASEADDR + 2 ) ) );
+    this->SetStandby( STDBY_RC );
+
+    // Convertion from LSB to distance. For explanation on the formula, refer to Datasheet of SX1280
+    switch( resultType )
+    {
+        case RANGING_RESULT_RAW:
+            // Convert the ranging LSB to distance in meter
+            // The theoretical conversion from register value to distance [m] is given by:
+            // distance [m] = ( complement2( register ) * 150 ) / ( 2^12 * bandwidth[MHz] ) )
+            // The API provide BW in [Hz] so the implemented formula is complement2( register ) / bandwidth[Hz] * A,
+            // where A = 150 / (2^12 / 1e6) = 36621.09
+            val = ( double )complement2( valLsb, 24 ) / ( double )this->GetLoRaBandwidth( ) * 36621.09375;
+            break;
+
+        case RANGING_RESULT_AVERAGED:
+        case RANGING_RESULT_DEBIASED:
+        case RANGING_RESULT_FILTERED:
+            val = ( double )valLsb * 20.0 / 100.0;
+            break;
+        default:
+            val = 0.0;
+    }
+       
+
+    return valLsb;
+}
+
 uint8_t SX1280::GetRangingPowerDeltaThresholdIndicator( void )
 {
     SetStandby( STDBY_XOSC );
@@ -1183,6 +1245,13 @@ void SX1280::ProcessIrqs( void )
                         if( rangingDone != NULL )
                         {
                             rangingDone( IRQ_RANGING_SLAVE_VALID_CODE );
+                        }
+                    }
+                    if( AdvancedRangingOn && ( ( irqRegs & IRQ_PREAMBLE_DETECTED ) == IRQ_PREAMBLE_DETECTED ) )
+                    {
+                        if( rangingDone != NULL )
+                        {
+                            rangingDone( IRQ_ADVANCED_RANGING_DONE );
                         }
                     }
                     if( ( irqRegs & IRQ_RX_TX_TIMEOUT ) == IRQ_RX_TX_TIMEOUT )

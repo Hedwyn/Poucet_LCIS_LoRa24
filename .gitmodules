@@ -1,3 +1,6 @@
 [submodule "Lora24_firmware/mbed-os"]
 	path = Lora24_firmware/mbed-os
 	url = https://github.com/ARMmbed/mbed-os.git
+[submodule "SX1280Lib"]
+	path = Lora24_firmware/SX1280Lib
+	url = https://github.com/Hedwyn/SX1280Lib.git

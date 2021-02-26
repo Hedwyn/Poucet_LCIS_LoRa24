@@ -1,10 +1,30 @@
+"""****************************************************************************
+Copyright (C) 2019 Project Poucet - LCIS Laboratory
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, in version 3.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+This program is part of the SecureLoc Project @https://github.com/Hedwyn/SecureLoc
+ ****************************************************************************
+@file application.py
+@author Baptiste Pestourie
+@date 2018 February 1st
+@brief Deployment module - handles complation & deployment automation fore SX1280-based ranging boards
+@see https://github.com/Hedwyn/Poucet_LCIS_LoRa24 {private repo- you need permission access}
+"""
+
 import subprocess
 import shutil
 from enum import Enum
 import os, string
 import sys
 import json
-from shutil import copyfile
+from shutil import copyfile, rmtree
 
 class Os(Enum):
     WIN = 0
@@ -36,7 +56,8 @@ TARGET = "NUCLEO_L432KC"
 TARGETS = ["NUCLEO_L432KC", "NUCLEO_L476RG"]
 TOOLCHAIN = "GCC_ARM"
 PROJECT_NAME = "SX1280"
-
+APP_CONFIG_FILE = "mbed_app.json"
+VERBOSE = True
 
 class ProjectConfig:
     def __init__(self, os_path, drivers_path, project_libs, profile):
@@ -66,19 +87,44 @@ def call_cmd(cmd):
         # displaying the command's output in stdout. Automatic new line in Python' print is removed
         print(line.decode('utf-8'), end = "")
 
+def import_app_config(os_path):
+    try:
+        copyfile(APP_CONFIG_FILE, os_path + "/" + APP_CONFIG_FILE)
+    except:
+        print("App config file not found - make sure to define an mbed config file at the root of this project")
 
-def build_drivers(config, clean = False):
-    cmd = MBED_COMPILE + ' '
-    if clean:
-        cmd += "-c"
+
+def clean_drivers_build(config):
+    # removing previous static library. Mbed copile clean flag is flawed when building libraries so this step has to be done by hand
+    root_dir = os.path.basename(os.getcwd())
+    build_path = 'BUILD/libraries/' + root_dir
+    if os.path.exists(build_path):
+        build_path = 'BUILD/libraries/' + root_dir
+        print("Cleaning previous build...")
+        rmtree(build_path)
+
+def build_drivers(config, clean = False, target = TARGET):
+    root_dir = os.path.basename(os.getcwd())
+    static_lib_path = 'BUILD/libraries/' + root_dir + '/' + target + '/GCC_ARM-' + config.profile.upper() + '/' + 'libmbed-os.a'
+    print(static_lib_path)
+    # checking that the OS has an app config file. If not, importing it.
+    if not(os.path.exists(config.os_path + "/" + APP_CONFIG_FILE)):
+        print("Importing app config file...")
+        import_app_config(config.os_path)
+    else:
+        print("App config file found")
+    cmd = MBED_COMPILE
+    cmd += " --target " + target
     cmd += " --source " + config.os_path
     for driver in config.drivers_path:
         cmd += " --source " + driver
     
     cmd += " --library"
+
     if config.profile:
         cmd += " --profile " + config.profile
-        
+    if clean:
+        cmd += " -c"      
     print(cmd)
     call_cmd(cmd)
 
@@ -87,10 +133,11 @@ def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean 
         total_slaves = 1
     cmd = MBED_COMPILE + ' '
     release_name = (TOOLCHAIN + "-" + config.profile.upper())  if config.profile else TOOLCHAIN
-    static_libs_path = "BUILD/" + "libraries" + "/" + PROJECT_NAME + "/" + target + "/" + release_name
+    root_dir = os.path.basename(os.getcwd())
+    static_libs_path = "BUILD/" + "libraries" + "/" + root_dir+ "/" + target + "/" + release_name
     print(static_libs_path)
     if total_slaves == 0:
-        tptam_slaves = 1
+        total_slaves = 1
     if clean:
         cmd += "-c"
     for lib in config.project_libs:
@@ -100,7 +147,7 @@ def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean 
         cmd += " --source " + static_libs_path 
     else:
         print("OS and drivers have not been built yet. Proceeding to build them.")
-        build_drivers(config, clean)
+        build_drivers(config, clean = clean, target = target)
 
     # setting the target
     cmd += " --target " + target
@@ -227,13 +274,16 @@ def associate_bins_to_drives(ordering_list = None):
         drive_to_bin_dic[stm32] = bin_name, target
     return(drive_to_bin_dic)
 
-def deploy(build_config_path = BUILD_CONFIG_PATH, ordering_list = None, total_slaves = None):
+def deploy(build_config_path = BUILD_CONFIG_PATH, ordering_list = None, total_slaves = None, clean_drivers = False):
     drive_to_bin_dic = associate_bins_to_drives(ordering_list)
     devices_path = [drive for drive in drive_to_bin_dic]
     bin_names = [drive_to_bin_dic[drive][0] + BIN_EXTENSION for drive in drive_to_bin_dic]
     targets = [drive_to_bin_dic[drive][1] for drive in drive_to_bin_dic]
     total_devices = len(devices_path)
     project_conf = parse_build_config(build_config_path)
+
+    if clean_drivers:
+        clean_drivers_build(project_conf)
     print(bin_names, devices_path)
     # compiling firmware, one binary for each device
     n_compile(project_conf, total_devices, targets, total_slaves)
@@ -262,20 +312,25 @@ if __name__ == "__main__":
     # default arguments 
     total_slaves = None
     build_config_path = BUILD_CONFIG_PATH
+    clean = False
 
     for idx, argv in enumerate(sys.argv[1:]):
         if argv[0] == "-":
             # flag detected
             if argv[1:] == "build":
                 build_config_path = sys.argv[idx + 2]
-            
+
+            if argv[1:] == "rebuild":
+                build_config_path = sys.argv[idx + 2]
+                clean = True
+
             elif argv[1:] == "total_slaves":
                 try:
                     total_slaves = int(argv[idx + 2])
                 except:
                     print("Please provided an integer value for the total number of slaves")
-            
-    deploy(build_config_path = build_config_path, total_slaves =  total_slaves)
+         
+    deploy(build_config_path = build_config_path, total_slaves =  total_slaves, clean_drivers = clean)
 
 
 

@@ -651,6 +651,8 @@ typedef enum
     RADIO_TICK_SIZE_4000_US                 = 0x03,
 }RadioTickSizes_t;
 
+#define ADVANCED_RANGING_ROLE 0x01
+
 /*!
  * \brief Represents the role of the radio during ranging operations
  */
@@ -992,6 +994,11 @@ private:
     bool IrqState;
 
     /*!
+     * \brief Holds the internal operating mode of the radio
+     */
+    bool AdvancedRangingOn = false;
+
+    /*!
      * \brief Hardware DIO IRQ functions
      */
     // DioIrqHandler dioIrq;
@@ -1247,6 +1254,19 @@ public:
      * \param [in]  timeout       Structure describing the reception timeout value
      */
     void SetRx( TickTime_t timeout );
+
+    /*!
+     * \brief Sets the radio in advanced ranging reception mode
+     *
+     * \param [in]  timeout       Structure describing the reception timeout value
+     */
+    void SetAdvancedRanging(TickTime_t timeout );
+
+    /*!
+     * \brief Exits advanced ranging mode - Radio will stay in RX operating mode
+     *
+     */
+    void DisableAdvancedRanging();
 
     /*!
      * \brief Sets the Rx duty cycle management parameters
@@ -1610,6 +1630,17 @@ public:
      * \retval      ranging       The ranging measure filtered according to resultType [m]
      */
     double GetRangingResult( RadioRangingResultTypes_t resultType );
+
+    /*!
+     * \brief Return the advancedranging result value
+     *
+     * \param [in]  resultType    Specifies the type of result.
+     *                            [0: RAW, 1: Averaged,
+     *                             2: De-biased, 3:Filtered]
+     *
+     * \retval      ranging       The ranging measure filtered according to resultType [m]
+     */
+    double GetAdvancedRangingResult( RadioRangingResultTypes_t resultType );
 
     /*!
      * \brief Return the last ranging result power indicator

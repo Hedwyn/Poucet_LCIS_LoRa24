@@ -21,7 +21,7 @@
 #define INT(_FLOAT) (trunc(_FLOAT))
 #define DEC(_FLOAT) (FLOAT_EXPONENT * fabs(_FLOAT - INT(_FLOAT)) )
 
-#define INTER_RANGING_DELAY 20
+#define INTER_RANGING_DELAY 200
 #define CHANNEL_SWITCH 0
 #define RANGINGS_PER_ROTATION 100
 #define MAX_TIMEOUTS 20
@@ -30,7 +30,7 @@
 const int8_t defaultTxPower = 13;
 
 
-const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF9;
+const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF6;
 const RadioLoRaBandwidths_t defaultBw = LORA_BW_1600;
 const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
 
@@ -39,7 +39,7 @@ const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
 #define RANGING_ADDRESS_REGISTER_LAST_BYTE 0x919
 #define ADDRESS_NUMBER_OF_BITS_REGISTER 0x931
 
-#define WAIT_INPUT
+// #define WAIT_INPUT
 #define DEBUG 0
 #define VERBOSE 0
 
@@ -49,8 +49,8 @@ const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
             do { if (DEBUG) printf(fmt, ##__VA_ARGS__); } while (0)
 #define verbose_print(fmt, ...) \
             do { if (VERBOSE) printf(fmt, ##__VA_ARGS__); } while (0)
+#define ADVANCED_RANGING_ROLE 0x01
 
-#define ADVANCED_RANGING_OPCODE 0x9A
 /*!
  * \brief Ranging raw factors
  *                                  SF5     SF6     SF7     SF8     SF9     SF10
@@ -75,13 +75,16 @@ void onTxDone();
 void getRangingResults();
 
 Timer rangingClock;
+Timer sysClock;
+bool clock_on = false;
 int rangingCounter = 0;
 
 
 DigitalOut TX_LED( A4 );
 enum DeviceType{
     MASTER_DEVICE,
-    SLAVE_DEVICE
+    SLAVE_DEVICE,
+    PASSIVE_SLAVE_DEVICE
 };
 DeviceType myType; 
 
@@ -116,7 +119,11 @@ RadioCallbacks_t Callbacks =
 
 /** Peripherals - Serial USB and SX1280 Radio **/
 BufferedSerial pc( USBTX, USBRX );
-SX1280Hal Radio( D11, D12, D13, D10, D7, D9, NC, NC, A0, &Callbacks );
+#ifdef NUCLEO_L432KC
+    SX1280Hal Radio( D11, D12, D13, D10, D7, D9, NC, NC, A0, &Callbacks ); // L432_KC
+#else // NUCLEO_476RG
+    SX1280Hal Radio( D11, D12, D13, D7, D3, D5, NC, NC, A0, &Callbacks );
+#endif
 ModulationParams_t modulationParams;
 
 
@@ -133,12 +140,35 @@ bool resultPending = false;
 int successiveTimeouts = 0;
 
 
-// void setAdvancedRanging()
-// {
-//     uint8_t role = RADIO_RANGING_ROLE_SLAVE;
-//     Radio.WriteCommand(RADIO_SET_RANGING_ROLE, &role, 1);
-//     Radio.WriteCommand(ADVANCED_RANGING_OPCODE, &role, 1);
-// }
+void setAdvancedRanging()
+{
+    uint8_t role = RADIO_RANGING_ROLE_SLAVE;
+    Radio.WriteCommand(RADIO_SET_RANGING_ROLE, &role, 1);
+    role = ADVANCED_RANGING_ROLE;
+    Radio.WriteCommand(RADIO_SET_ADVANCED_RANGING, &role, 1);  
+    
+    /* Enabling continous reception mode */
+    // Radio.SetRx((TickTime_t){RADIO_TICK_SIZE_4000_US, 0xFFFF});
+    TickTime_t timeout = (TickTime_t){RADIO_TICK_SIZE_4000_US, 0xFFFF};
+    uint8_t buf[3];
+    buf[0] = timeout.PeriodBase;
+    buf[1] = ( uint8_t )( ( timeout.PeriodBaseCount >> 8 ) & 0x00FF );
+    buf[2] = ( uint8_t )( timeout.PeriodBaseCount & 0x00FF );
+
+    Radio.ClearIrqStatus( IRQ_RADIO_ALL );
+
+    Radio.WriteCommand( RADIO_SET_RX, buf, 3 );
+    printf("Advaneced ranging mode configuration done \r\n");
+}
+
+void getAdvancedRangingResult()
+{
+    Radio.SetStandby(STDBY_XOSC);
+    Radio.WriteRegister( 0x97F, Radio.ReadRegister( 0x97F ) | ( 1 << 1 ) );
+    Radio.WriteRegister(0x0924, ( Radio.ReadRegister(0x0924) & 0xCF) | ( ( (0x00 ) & 0x03 ) << 4 ) );
+    uint32_t result = ( ( Radio.ReadRegister( 0x0961) << 16 ) | ( Radio.ReadRegister( 0x0962 ) << 8 ) | ( Radio.ReadRegister(0x0963 ) ) );
+    printf("Advanced Ranging result :%lu\r\n", (unsigned int) result);
+}
 const uint8_t RANGING_ADDR[] =
 {
     0x00,
@@ -193,14 +223,25 @@ int main() {
                 myType = SLAVE_DEVICE;
                 printf("Starting as Slave \r\n");
                 break;
+            case 'p':
+                myType = PASSIVE_SLAVE_DEVICE;
+                printf("Starting as Passive Slave \r\n");
+                break;
             default:
-                printf("Wrong command received. Please send 'm' for Master and 's' for Slave");
+                printf("Wrong command received. Please send 'm' for Master, 's' for Slave, 'p' for Passive Slave \r\n");
                 ready = false;
                 break;
             }
     }
 #else
-    myType = (DEVICE_ID > 0)?SLAVE_DEVICE:MASTER_DEVICE;
+    #if DEVICE_ID == 0
+        myType = MASTER_DEVICE;
+    #elif DEVICE_ID == 1
+        myType = SLAVE_DEVICE;
+    #else 
+        myType = PASSIVE_SLAVE_DEVICE;
+    #endif
+
 #endif
     initRadio();
     ping();
@@ -210,23 +251,30 @@ int main() {
 
 void initRadio()
 {
-    verbose_print("Starting radio init\r\n");
+    printf("Starting radio init\r\n");
+    printf("Sleep\r\n");
+
     thread_sleep_for(1000); // wait for on board DC/DC start-up time
-    Radio.Init();    
+    printf("Init\r\n");
+
+    Radio.Init();
+    printf("Init done\r\n");
+
+    
     Radio.SetStandby( STDBY_RC );
     Radio.SetRegulatorMode(USE_LDO);
-
     /** Buffer init **/
     memset( &Buffer, 0x00, BufferSize );
-    Radio.SetBufferBaseAddresses( 0x00, 0x00 );
-    
-
+    Radio.SetBufferBaseAddresses( 0x00, 0x00 );  
+    printf("Buffer done\r\n");
     modulationParams.Params.LoRa.SpreadingFactor = defaultSf;
     modulationParams.Params.LoRa.Bandwidth = defaultBw;
     modulationParams.Params.LoRa.CodingRate = defaultCr;
     
     Radio.SetLNAGainSetting(LNA_HIGH_SENSITIVITY_MODE);
+
     Radio.SetInterruptMode();
+    printf("IRQ Set\r\n");
     
     verbose_print("Init completed...\r\n");
     
@@ -249,20 +297,20 @@ void setRadio(ModulationParams_t modulation)
     Radio.SetRfFrequency(Channels[channelIdx]);
     Radio.SetTxParams(DEFAULT_TX_POWER, RADIO_RAMP_20_US );
     Radio.SetRangingCalibration(calibration);
-    switch( modulation.Params.LoRa.Bandwidth )
-    {
-        case LORA_BW_0400:
-            requestDelay = RNG_TIMER_MS >> ( 0 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
-            break;
+    // switch( modulation.Params.LoRa.Bandwidth )
+    // {
+    //     case LORA_BW_0400:
+    //         requestDelay = RNG_TIMER_MS >> ( 0 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
+    //         break;
 
-        case LORA_BW_0800:
-            requestDelay  = RNG_TIMER_MS >> ( 1 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
-            break;
+    //     case LORA_BW_0800:
+    //         requestDelay  = RNG_TIMER_MS >> ( 1 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
+    //         break;
 
-        case LORA_BW_1600:
-            requestDelay  = RNG_TIMER_MS >> ( 2 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
-            break;
-    }    
+    //     case LORA_BW_1600:
+    //         requestDelay  = RNG_TIMER_MS >> ( 2 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
+    //         break;
+    // }    
 }
 
 bool setPreambleLength(PacketParams_t params, int length)
@@ -299,7 +347,8 @@ bool setPreambleLength(PacketParams_t params, int length)
 
 void setRangingAddress(uint8_t address)
 {
-    if (myType == MASTER_DEVICE)
+    // if (myType == MASTER_DEVICE)
+    if (myType != PASSIVE_SLAVE_DEVICE)
     {
         uint8_t buf[4];
         for (int i = 0; i < 3; i++) 
@@ -308,8 +357,8 @@ void setRangingAddress(uint8_t address)
         }      
         buf[4] = address;
         Radio.WriteRegister(REG_LR_REQUESTRANGINGADDR, buf, 4);
-    }
-    else {
+    // }
+    // else if (myType == SLAVE_DEVICE) {
         Radio.WriteRegister(RANGING_ADDRESS_REGISTER_LAST_BYTE, &address,1);
         /* settings the number of address bits to check to 8 */
         Radio.WriteRegister(ADDRESS_NUMBER_OF_BITS_REGISTER, 0);
@@ -319,10 +368,23 @@ void setRangingAddress(uint8_t address)
 
 
 void setIRQs() {
-    Radio.SetDioIrqParams(0xFFFF,
-                            IRQ_RANGING_SLAVE_REQUEST_DISCARDED | IRQ_RANGING_SLAVE_RESPONSE_DONE | IRQ_RANGING_MASTER_RESULT_VALID | IRQ_RANGING_MASTER_TIMEOUT | IRQ_RX_TX_TIMEOUT,
-                            IRQ_RADIO_NONE, 
-                            IRQ_RADIO_NONE );    
+    if (myType == PASSIVE_SLAVE_DEVICE)
+    {
+        /* In advanced ranging mode, the ranging completed interrrupt replaced preamble detected */
+        uint16_t mask = IRQ_PREAMBLE_DETECTED | IRQ_RX_TX_TIMEOUT;
+        Radio.SetDioIrqParams(  mask,
+                                mask,
+                                IRQ_RADIO_NONE, 
+                                IRQ_RADIO_NONE );  
+    } 
+    else 
+    {
+        uint16_t mask = (IRQ_RANGING_SLAVE_REQUEST_DISCARDED | IRQ_RANGING_SLAVE_RESPONSE_DONE | IRQ_RANGING_MASTER_RESULT_VALID | IRQ_RANGING_MASTER_TIMEOUT | IRQ_RX_TX_TIMEOUT);
+        Radio.SetDioIrqParams(  mask,
+                                mask,
+                                IRQ_RADIO_NONE, 
+                                IRQ_RADIO_NONE );  
+    }
 }
 
 
@@ -338,6 +400,8 @@ void ping()
     lastEvent = TIMEOUT;
     while (true)
     {
+        thread_sleep_for(1);
+
         if (lastEvent != NONE)
         {
             /* role rotation */
@@ -357,7 +421,11 @@ void ping()
             {
                 successiveTimeouts = 0;
                 /* otherwise switching roles */
-                role = (role==MASTER_DEVICE)?SLAVE_DEVICE:MASTER_DEVICE; 
+                if (role == MASTER_DEVICE)
+                    role = SLAVE_DEVICE;
+                else if (role == SLAVE_DEVICE)
+                    role = MASTER_DEVICE;
+                // role = (role==MASTER_DEVICE)?SLAVE_DEVICE:MASTER_DEVICE; 
                 debug_print("Switching roles...\r\n");
                 if (role == myType) 
                 {
@@ -381,17 +449,17 @@ void ping()
                 // hal_sleep();
             }
 
-            if (role == SLAVE_DEVICE) {  
+            else if (role == SLAVE_DEVICE) {  
+                Radio.SetRx((TickTime_t){RADIO_TICK_SIZE_1000_US, 1000});
                 debug_print("Setting Slave...\r\n");                 
-                Radio.SetRx((TickTime_t){RADIO_TICK_SIZE_1000_US, 500});
-                // if (resultPending)
-                // {
-                //     getRangingResults();
-                //     resultPending = false;
-                // }
+                // hal_sleep();            
+            }
 
-                // hal_sleep();
-                
+            else if (role == PASSIVE_SLAVE_DEVICE)
+            {
+                printf("Setting passive Slave...\r\n");                               
+                Radio.SetAdvancedRanging( (TickTime_t){RADIO_TICK_SIZE_1000_US, 0xFFFF});
+               // hal_sleep();                
             }
             lastEvent = NONE;
         }
@@ -446,30 +514,48 @@ void onReceptionTimeout()
 }
 
 void onRangingDone(IrqRangingCode_t code)
-{   
+{  
     rangingClock.stop();
-    debug_print("Ranging result: %d\r\n", code);
-    if ( (code == IRQ_RANGING_SLAVE_ERROR_CODE) || (code == IRQ_RANGING_MASTER_ERROR_CODE) )
+
+    sysClock.stop();
+    printf("Elapsed time: %llu\n", sysClock.elapsed_time().count());
+    sysClock.reset();
+    sysClock.start();
+    
+
+
+    printf("Ranging done %d\r\n", code);
+    if (myType == PASSIVE_SLAVE_DEVICE)
     {
-        printf("Ranging timeout: %d; %d; %d\r\n", code, rangingCounter, channelIdx);  
+        Radio.DisableAdvancedRanging();
+        // getAdvancedRangingResult();
+        getRangingResults();
+        // double raw = Radio.GetAdvancedRangingResult(RANGING_RESULT_RAW);
+        // printf("%d.%d\r\n", (int) INT(raw), (int) DEC(raw) );
+        lastEvent = SLAVE_DONE;
+    }
+    else if ( (code == IRQ_RANGING_SLAVE_ERROR_CODE) || (code == IRQ_RANGING_MASTER_ERROR_CODE) )
+    {
+        printf("Ranging timeout: %d; %d; %d, %d\r\n", code, rangingCounter, channelIdx, (int) code);  
         lastEvent = TIMEOUT;
         successiveTimeouts++;
     }
-    else if (code == IRQ_RANGING_SLAVE_VALID_CODE)
-    {
-        debug_print("Ranging success: %d\r\n", code); 
-        lastEvent = SLAVE_DONE;
-    }
+
     else if (code == IRQ_RANGING_MASTER_VALID_CODE)
     {
-        debug_print("Ranging success: %d\r\n", code); 
         verbose_print("Elapsed time: %llu; Counter: %d\r\n", rangingClock.elapsed_time().count(), rangingCounter);
         lastEvent = MASTER_DONE;
         resultPending = true;
         getRangingResults();
     }
+
+    else if ( (code == IRQ_RANGING_SLAVE_VALID_CODE) || (code == IRQ_ADVANCED_RANGING_DONE) )
+    {
+        lastEvent = SLAVE_DONE;
+    }
     rangingDone = true;
-    Radio.ClearIrqStatus(0xFFFF);    
+    if (myType != PASSIVE_SLAVE_DEVICE)
+        Radio.ClearIrqStatus(0xFFFF);    
 }
 
 void onRxError(IrqErrorCode_t code)
