@@ -6,20 +6,22 @@ import sys
 import time
 import random
 
-PORT1 = 'COM1'
+PORT1 = 'COM4'
 PORT2 = 'COM2'
 LOGS_DIR = "Logs/"
 
 log = None
-TOTAL_RANGINGS = 4000
+TOTAL_RANGINGS = 400
+topics = ["distance", "fei", "skew", "rssi", "snr", "calibration", "frequency", "sf", "bw", "preamble-length", "duration"]
+
 
 def parse_json(line):
-    topics = ["distance", "fei", "rssi", "snr", "calibration", "frequency", "sf", "bw", "preamble-length", "duration"]
     values = line.split("|")
     dic = {}
     for topic, val in zip(topics, values):
         dic[topic] = val
     return(dic)
+
 
 def read_serial(com_port, f = None):
     global log
@@ -45,7 +47,7 @@ def read_serial(com_port, f = None):
                 print("Ctrl + C received, exitting")
                 exit_flag = True
                 break
-            if line[0] == '{' or line[0] == '*':
+            if line[0] == '{' or (line[0] == '*' and len(line) >= len(topics) ):
                 sample_ctr += 1
                 if line[0] == '*':
                     sample = parse_json(line[1:])
