@@ -1,10 +1,15 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import json
 import random
 import os
 import sys
+
+plt.style.use('C:/Users/pestourb/Documents/JPMC/Stylefiles/classic.mplstyle')
+
+mpl.rcParams['lines.linewidth'] = 1
 
 devices = {}
 LOGS_DIR = 'LOGS/'
@@ -158,7 +163,108 @@ def plot_results(data = "distance", topic = "frequency"):
     plt.show()
 
 
+def linear_plot():
+    """Plots the results in chronological order"""
+    figs = {}
+    topics = ["rssi", "distance","tx_power"]
+    maxes = {"rssi": 0, "distance": 100,"tx_power": 13}
 
+    for t in topics:
+        f = plt.figure()
+        figs[t] = f,f.add_subplot(111)
+    nodes = ["COM3", "COM4"]
+   
+    for node in nodes:
+        data = {} 
+        for sample in devices[node]:
+            for entry in sample:
+                if entry in topics:
+                    if not(entry in data):
+                        data[entry] = []
+                    try:
+                        val = float(sample[entry])
+                        if val < maxes[entry]:
+                            data[entry].append(val)
+                    except:
+                        pass
+
+
+        for topic in topics:
+            f, a = figs[topic]
+            a.plot(data[topic], label = topic + " node " + node)
+            a.set_title(topic)
+    plt.legend()
+    plt.grid()
+
+def plot_default_correction_values(fl):
+    plots = {}
+    ## extraction
+    with open(fl) as f:
+        for line in f:
+            sample = json.loads(line) 
+            entry = "SF" + str(sample["SF"]) + ", " + "BW " + str(sample["BW"]) + " KHz"
+            if not entry in plots:
+                plots[entry] = []
+            plots[entry].append(float(sample["distance"]))
+
+    ## plot
+    figs = [plt.figure() for i in range(6)]
+    axes = []
+    for idx, fig in enumerate(figs):
+        fig.suptitle("SF" + str(5 + idx), fontsize = 18)
+        bw400 = fig.add_subplot(221)
+        bw800 = fig.add_subplot(222)
+        bw1600 = fig.add_subplot(223)
+        axes.append([bw400, bw800, bw1600])
+
+    for idx, entry in enumerate(plots):
+        sf_idx = idx // 3;
+        bw_idx = idx % 3;
+        rssi_axe = [i - 150 for i in range(160)]
+        axes[sf_idx][bw_idx].plot(rssi_axe, plots[entry], label = entry, color = "#2fa19e")
+        axes[sf_idx][bw_idx].set_xlabel("Ranging RSSI (dBm)", fontsize = 12)
+        axes[sf_idx][bw_idx].set_ylabel("Distance correction (m)", fontsize = 12)
+        axes[sf_idx][bw_idx].legend(loc = 'lower right')
+        axes[sf_idx][bw_idx].grid()
+        axes[sf_idx][bw_idx].set_xticks(np.arange(-150, 0, 30))    
+
+        fig.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    # mng = plt.get_current_fig_manager()
+    # mng.full_screen_toggle()
+    for fig in figs:
+        # fig.set_size_inches((9, 16), forward=False)
+        fig.tight_layout()
+        fig.savefig('Logs/CorrectionValues/' + fig._suptitle.get_text() + '.jpeg', dpi = 1200)
+
+def rssi_calibration(fl):
+    rssi = {}
+    bins = [-20 + x * -10 for x in range(10)]
+    dist = []
+    for j in range (10):
+        dist.append([])
+  
+    with open(fl) as f:
+        chip = 'COM4'
+        for line in f:
+            sample = json.loads(line) 
+            if sample["chip"] == chip:
+                i = 0
+                while float(sample["rssi"]) < bins[i]:
+                    i += 1
+                dist[i].append(float(sample["distance"]))
+    y = []
+    for d in dist:
+        if d:
+            y.append(np.mean(d))
+        else:
+            y.append(0)
+    
+    fig = plt.figure()
+    axe = fig.add_subplot(111)
+    print(bins)
+    print(y)
+    # axe.plot(bins, dist)
+    
 if __name__ =="__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "-delay_error":
@@ -202,7 +308,17 @@ if __name__ =="__main__":
                     except:
                         print("failed to open" + f)
                         pass
-
-    plt.show()
+        elif sys.argv[1] == "-chronological":
+            parse_log(sys.argv[2])
+            linear_plot()
+        elif sys.argv[1] == "-rssi_calibration":
+            # parse_log(sys.argv[2])
+            # plot_results("distance", "rssi")
+            rssi_calibration('Logs/' + sys.argv[2])
+       
+        elif sys.argv[1] == "-dump_correction_values":
+            f = "Logs\CorrectionValues\CorrectionValues.json"
+            plot_default_correction_values(f)
+    # plt.show()
 
         

@@ -9,4 +9,6 @@ double GetRangingCorrectionPerSfBwGain( const RadioLoRaSpreadingFactors_t sf, co
 double ComputeRangingCorrectionPolynome(const RadioLoRaSpreadingFactors_t sf, const RadioLoRaBandwidths_t bw, const double median);
 }
 
+extern const double* RangingCorrectionPerSfBwGain[6][3];
+
 #endif // __SX1280_RANGING_CORRECTION_H__

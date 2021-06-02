@@ -9,6 +9,7 @@
 #include "FreqLUT.h"
 #include "filters.h"
 
+
 /** 
  * Compile with
  * mbed compile --source C:\Users\pestourb\Documents\Poucet\Mbed-test\SX1280\BUILD\libraries\SX1280\NUCLEO_L432KC\GCC_ARM-RELEASE --source RangingDemo -NRangingDemo
@@ -25,7 +26,7 @@
 
 #define INTER_RANGING_DELAY 50     /**<Master sleep time in-between each ranging*/
 #define CHANNEL_SWITCH 0            /**<If enabled, the transceiver will switch channels after a given number of rangings*/
-#define RANGINGS_PER_ROTATION 40    /**<Number of ranging protocols held before switching channels. Does nothing if channel rotation is off*/
+#define RANGINGS_PER_ROTATION 100    /**<Number of ranging protocols held before switching channels. Does nothing if channel rotation is off*/
 #define MAX_TIMEOUTS 5              /**<After that number of timeouts the transceiver will go back to default parameters*/
 #define CHANNEL_INCREMENT 5         /**<Value by which the channel index is incremented at each channel rotation. If superior to 1, some channels will be skipped */
 #define CHANNEL_WIDTH 2000000       /**<Bandwidth of LoRa 2.4 Ghz channels */
@@ -34,7 +35,7 @@
 #define SYMBOL_LENGTH_SF5 197       /**<Symbol length for SF5 in microseconds. Increasing SF by 1 doubles that length */
 #define SPEED_OF_LIGHT 3E8          /**<Speed of light in m/s*/
 #define ENABLE_FILTERING 0 
-#define ENABLE_PASSIVE   0         /**<If enabled, node id's above 1 will be started as passive slaves performing differential ranging */
+#define SINGLE_SLAVE_MODE   0         /**<If enabled, only one slave is defined. Node IDs above 1 will be started as passive slaves performing differential ranging */
 #define DEFAULT_TX_POWER 13 /**<Default Tx power, in Dbm */
 #define ADDRESS_NUMBER_OF_BITS_REGISTER 0x931
 #define MOVING_MEDIAN_LENGTH 20
@@ -63,11 +64,12 @@
 const int8_t defaultTxPower = 13;
 
 /** index of the current slave address */
-int slaveIndex;
+int slaveIndex, masterIndex;
+bool myTurn = true;
 
 
-const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF10;
-const RadioLoRaBandwidths_t defaultBw = LORA_BW_1600;
+const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF9;
+const RadioLoRaBandwidths_t defaultBw = LORA_BW_0400;
 const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
 
 /*!
@@ -83,7 +85,7 @@ const double   RNG_FGRAD_1600[] = { 0.103,  -0.041, -0.101, -0.211, -0.424, -0.8
 
 uint16_t calibration;
 double feiTable[TOTAL_DEVICES] = {};
-MovingMedian* filters[TOTAL_DEVICES];
+MovingMedian<20> *filters[TOTAL_DEVICES];
 
 class Stack
 {
@@ -149,20 +151,23 @@ void onRangingDone(IrqRangingCode_t code);
 void onRxError(IrqErrorCode_t code);
 void onRxDone();
 void onTxDone();
-void getRangingResults();
+void getRangingResults(bool differential = false);
 double convertFeiToPpm(double fei);
 double correctFei(double distance, double fei);
 void initAddresses();
-void setMasterAddress(uint8_t address);
-void setSlaveAddress(uint8_t address);
+void setMasterAddress(int masterIdx, int slaveIdx);
+void setSlaveAddress(int slaveIdx);
 void setBroadcast();
-void initFilters();
 int getMasterIndex();
+int getSlaveIndex();
+int getBW(RadioLoRaBandwidths_t bw);
+void acceptAllRequests();
 
 Timer rangingClock;
 Timer sysClock;
 bool clock_on = false;
 int rangingCounter = 0;
+int8_t txPower = DEFAULT_TX_POWER;
 
 
 DigitalOut TX_LED( A4 );
@@ -171,12 +176,16 @@ enum DeviceType{
     SLAVE_DEVICE,
     PASSIVE_SLAVE_DEVICE
 };
-DeviceType myType; 
+DeviceType myType, role;
+
+
 
 enum RangingEvent {
     NONE,
     TIMEOUT,
+    REQUEST_IGNORED,
     SLAVE_DONE,
+    PASSIVE_SLAVE_DONE,
     MASTER_DONE
 };
 bool rangingDone = true;
@@ -231,17 +240,33 @@ bool resultPending = false;
 int successiveTimeouts = 0;
 uint32_t channelFreq = BOTTOM_FREQUENCY;
 
-
-void initFilters() 
+// #define DUMP_CORRECTION_VALUES
+#ifdef DUMP_CORRECTION_VALUES
+void dumpRssiCalibration()
 {
-    for (int i = 0; i < TOTAL_DEVICES; i++)
+    static const RadioLoRaSpreadingFactors_t SF_LIST[] = {LORA_SF5, LORA_SF6, LORA_SF7, LORA_SF8, LORA_SF9, LORA_SF10};
+    static const RadioLoRaBandwidths_t BW_LIST[] = {LORA_BW_0400, LORA_BW_0800, LORA_BW_1600};
+    double correction;
+    for (int i = 0; i < 6; i++) // SF
     {
-        if (i != DEVICE_ID)
+        for (int j = 0; j < 3; j++) // BW
         {
-            filters[i] = new MovingMedian(MOVING_MEDIAN_LENGTH);
+            for (int k = 0; k < 160; k++)
+            {
+                correction = Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
+                    SF_LIST[i],
+                    BW_LIST[j],
+                    128
+                );
+                correction = RangingCorrectionPerSfBwGain[i][j][k];
+                printf("{\"SF\":%d, \"BW\":%d, \"RSSI\":%d, \"distance\":%d.%d}\r\n",(int) SF_LIST[i] >> 4, getBW(BW_LIST[j]), k, (int) INT(correction), (int) DEC(correction));
+                thread_sleep_for(5);
+            }
         }
     }
+    exit(0);
 }
+#endif
 
 double convertFeiToPpm(double fei)
 {
@@ -260,18 +285,34 @@ double correctFei(double distance, double fei)
     double halfReplyTime = pow(2, (sf - 5)) * SYMBOL_LENGTH_SF5; /* in us */
     double tofError = halfReplyTime * skew; /* tof error for a one-way trip in ps (us * ppm) */
     double distanceError = tofError * SPEED_OF_LIGHT * 1E-12; /* in m */
-    printf("distance: %d.%d, distance Error = %d.%d\r\n",  (int) INT(distance), (int) DEC(distance), (int) INT(distanceError), (int) DEC(distanceError));
+    // printf("distance: %d.%d, distance Error = %d.%d\r\n",  (int) INT(distance), (int) DEC(distance), (int) INT(distanceError), (int) DEC(distanceError));
     return(distance - distanceError);
 }
-int getMasterIndex()
+
+int getMasterIndex(uint32_t receivedAddress)
 {
-    uint32_t receivedAddress = Radio.GetAdvancedRangingAddress();
     /* master address is the third byte of the received address */
     uint8_t masterAddress = (receivedAddress >> 8) & 0x000000FF;
     int i = 0, ret = -1;
     while ( (i < TOTAL_DEVICES) && ret == -1)
     {
         if (RANGING_ADDR[i] == masterAddress)
+        {
+            ret = i;
+        }
+        i++;
+    }
+    return(ret);
+}
+
+int getSlaveIndex(uint32_t receivedAddress)
+{
+    /* master address is the third byte of the received address */
+    uint8_t slaveAddress = receivedAddress  & 0x000000FF;
+    int i = 0, ret = -1;
+    while ( (i < TOTAL_DEVICES) && ret == -1)
+    {
+        if (RANGING_ADDR[i] == slaveAddress)
         {
             ret = i;
         }
@@ -319,6 +360,9 @@ int main() {
             {
             case 'm':
                 myType = MASTER_DEVICE;
+                #ifdef DUMP_CORRECTION_VALUES
+                    dumpRssiCalibration();
+                #endif
                 printf("Starting as Master \r\n");
                 break;
             case 's':
@@ -338,7 +382,7 @@ int main() {
 #else
     #if DEVICE_ID == 0
         myType = MASTER_DEVICE;
-    #elif (DEVICE_ID == 1) || !ENABLE_PASSIVE
+    #elif (DEVICE_ID == 1) || !SINGLE_SLAVE_MODE
         myType = SLAVE_DEVICE;
     #else 
         myType = PASSIVE_SLAVE_DEVICE;
@@ -346,7 +390,7 @@ int main() {
 
 #endif
     slaveIndex = (myType == MASTER_DEVICE)?TOTAL_SLAVES:0;
-    initFilters();
+    role = myType;
     initRadio();
     ping();
     return 0;
@@ -381,6 +425,7 @@ void initRadio()
     printf("IRQ Set\r\n");
     
     verbose_print("Init completed...\r\n");
+    role = myType;
     initAddresses();
     
 }
@@ -392,10 +437,11 @@ void setRadio(ModulationParams_t modulation)
     Radio.SetModulationParams(&modulation);
     PacketParams_t params;
     params.PacketType = PACKET_TYPE_RANGING;
+    // setPreambleLength(params, 8);
     params.Params.LoRa.PreambleLength = 8;
     params.Params.LoRa.HeaderType = LORA_PACKET_VARIABLE_LENGTH;
     params.Params.LoRa.PayloadLength = 1;
-    params.Params.LoRa.Crc = LORA_CRC_OFF;
+    params.Params.LoRa.Crc = LORA_CRC_ON;
     params.Params.LoRa.InvertIQ = LORA_IQ_NORMAL;
 
     Radio.SetPacketParams(&params);
@@ -426,7 +472,8 @@ void setRadio(ModulationParams_t modulation)
             calibration = RNG_CALIB_1600[sfIndex];
             break;
     }    
-    calibration = 13138;
+    // calibration = 13138;
+    requestDelay = INTER_RANGING_DELAY;
     if (myType == MASTER_DEVICE)
     {
         Radio.SetRangingCalibration(calibration);
@@ -472,28 +519,33 @@ bool setPreambleLength(PacketParams_t params, int length)
 /**
  * @remark Note that setting 0x00000000 as address will lead the node to ignore the address, thus 0 should be avoided unless that's the wanted behavior 
  */
-void setMasterAddress(uint8_t master_address, uint8_t slave_address)
+void setMasterAddress(int masterIdx, int slaveIdx)
 {
     uint8_t buf[4] =  {};
     /* settings the number of address bits to check to 8 */
     /* Note that the bytes are checked from fourth to first byte of the buffer */
-    buf[2] = master_address;
-    buf[3] = slave_address;
+    buf[2] = RANGING_ADDR[masterIdx];
+    buf[3] = RANGING_ADDR[slaveIdx];
+    printf("Programmed adress: %02x%02x%02x%02x\r\n", buf[0], buf[1], buf[2], buf[3]);
     Radio.WriteRegister(REG_LR_REQUESTRANGINGADDR, buf, 4);
+    masterIndex = masterIdx;
+    slaveIndex = slaveIdx;
 }
 
-void setSlaveAddress(uint8_t address)
+void setSlaveAddress(int slaveIdx)
 {
     uint8_t buf[4] =  {};
-    buf[3] = address;
+    buf[3] = RANGING_ADDR[slaveIdx];
     Radio.WriteRegister(REG_LR_DEVICERANGINGADDR, buf, 4);
 }
 
 void acceptAllRequests()
 {
-    uint8_t buf[4] =  {};
+    uint8_t buf[4] =  {0};
+    // Radio.WriteRegister(ADDRESS_NUMBER_OF_BITS_REGISTER, 0);
     /* setting request address to 0 will accept all requests regardless of the address */
     Radio.WriteRegister(REG_LR_DEVICERANGINGADDR, buf, 4);
+
 }
 
 void setBroadcast()
@@ -508,27 +560,30 @@ void initAddresses()
     /* settings the number of address bits to check to 8 */
     /* Note that the bytes are checked from fourth to first byte of the buffer */
     Radio.WriteRegister(ADDRESS_NUMBER_OF_BITS_REGISTER, 0);
-    switch (myType)
+    switch (role)
     {
     case MASTER_DEVICE:
         printf("Init master address, %d, %d, %d\r\n", DEVICE_ID, TOTAL_SLAVES, RANGING_ADDR[1]);
         // acceptAllRequests();
-        setSlaveAddress(RANGING_ADDR[0]);
-        setMasterAddress(RANGING_ADDR[0], RANGING_ADDR[1]);
+        setSlaveAddress(0);
+        setMasterAddress(0, 1);
         break;
     case SLAVE_DEVICE:
         printf("Init slave address, %d, %d, %d\r\n", DEVICE_ID, TOTAL_SLAVES, RANGING_ADDR[DEVICE_ID]);
-        setMasterAddress(RANGING_ADDR[DEVICE_ID], RANGING_ADDR[0]);
-        setSlaveAddress(RANGING_ADDR[DEVICE_ID]);
+        setMasterAddress(DEVICE_ID, 0);
+        setSlaveAddress(DEVICE_ID);
         break;
     case PASSIVE_SLAVE_DEVICE:
-        acceptAllRequests();
+        printf("Accepting all requests\r\n");
+        setMasterAddress(DEVICE_ID, 0);
+        setSlaveAddress(DEVICE_ID);
+        // acceptAllRequests();
         break;
     }
 }
 
 void setIRQs() {
-    if (myType == PASSIVE_SLAVE_DEVICE)
+    if (role == PASSIVE_SLAVE_DEVICE)
     {
         /* In advanced ranging mode, the ranging completed interrrupt replaced preamble detected */
         uint16_t mask = IRQ_PREAMBLE_DETECTED | IRQ_RX_TX_TIMEOUT;
@@ -552,7 +607,6 @@ void ping()
 {
     double rawRangingRes;
     uint8_t frameCounter = 0;
-    DeviceType role = myType;
     rangingClock.start();
     setRadio(modulationParams);
     setIRQs();
@@ -577,37 +631,38 @@ void ping()
                     rangingCounter = 0;
                 }
             }
+            else if (lastEvent == REQUEST_IGNORED)
+            {
+                role = SLAVE_DEVICE;
+            }
             else
             {
                 successiveTimeouts = 0;
-                /* otherwise switching roles */
-                if (role == MASTER_DEVICE)
-                    role = SLAVE_DEVICE;
-                else if (role == SLAVE_DEVICE)
-                    role = MASTER_DEVICE;
-                // role = (role==MASTER_DEVICE)?SLAVE_DEVICE:MASTER_DEVICE; 
-                debug_print("Switching roles...\r\n");
+                
                 if (role == myType) 
                 {
                     rangingCounter += 1;
                     /* Channel rotation */
                     if ( CHANNEL_SWITCH && ( rangingCounter % RANGINGS_PER_ROTATION == 0) )
                     {
-                        printf("Switching channel \r\n");
-                        channelIdx = (channelIdx + CHANNEL_INCREMENT) % CHANNELS;
-                        if (ORDER_CHANNELS)
-                        {
-                            channelFreq = BOTTOM_FREQUENCY + channelIdx * CHANNEL_WIDTH;
-                            Radio.SetRfFrequency(channelFreq);
-                        }
-                        else
-                        {
-                            Radio.SetRfFrequency(Channels[channelIdx]);
-                        }
-                        if (myType == MASTER_DEVICE)
-                        {
-                            Radio.SetRangingCalibration(calibration);            
-                        }
+                        if (txPower > 0)
+                            txPower --;
+                        Radio.SetTxParams(txPower, RADIO_RAMP_20_US );
+                        // printf("Switching channel \r\n");
+                        // channelIdx = (channelIdx + CHANNEL_INCREMENT) % CHANNELS;
+                        // if (ORDER_CHANNELS)
+                        // {
+                        //     channelFreq = BOTTOM_FREQUENCY + channelIdx * CHANNEL_WIDTH;
+                        //     Radio.SetRfFrequency(channelFreq);
+                        // }
+                        // else
+                        // {
+                        //     Radio.SetRfFrequency(Channels[channelIdx]);
+                        // }
+                        // if (myType == MASTER_DEVICE)
+                        // {
+                        //     Radio.SetRangingCalibration(calibration);            
+                        // }
                     }
                 }
             }      
@@ -617,29 +672,32 @@ void ping()
                 printf("Saving fei: %f\r\n", feiTable[slaveIndex]);
                 if (myType == MASTER_DEVICE)
                 { 
-                    if ( (TOTAL_SLAVES > 1) && (slaveCounter++ % 1 == 0) )
+                    if (!SINGLE_SLAVE_MODE && (TOTAL_SLAVES > 1) && (slaveCounter++ % 1 == 0) )
                     {
                         slaveIndex = (slaveIndex % TOTAL_SLAVES) + 1;
-                        setMasterAddress(RANGING_ADDR[0], RANGING_ADDR[slaveIndex]);
+                        setMasterAddress(0, slaveIndex);
                     }
                 }
-                printf("Setting Master...\r\n");
+                printf("Setting Master...[%d]\r\n", DEVICE_ID);
                 thread_sleep_for(requestDelay);
                 rangingClock.reset();     
                 rangingClock.start();
                 Radio.SetTx((TickTime_t) {RADIO_TICK_SIZE_4000_US, 0x0000});     
-                // hal_sleep();
+
             }
 
             else if (role == SLAVE_DEVICE) {  
-                Radio.SetRx((TickTime_t){RADIO_TICK_SIZE_1000_US, 2000});
-                debug_print("Setting Slave...\r\n");                 
+                printf("Setting Slave...\r\n");                 
+                Radio.SetRx((TickTime_t){RADIO_TICK_SIZE_1000_US, ( 2 *TOTAL_DEVICES) *  requestDelay});
                 // hal_sleep();            
             }
 
             else if (role == PASSIVE_SLAVE_DEVICE)
             {
-                printf("Setting passive Slave...\r\n");                            
+                printf("Setting passive Slave...\r\n");    
+                setIRQs();
+                acceptAllRequests();   
+                thread_sleep_for(2);
                 Radio.SetAdvancedRanging( (TickTime_t){RADIO_TICK_SIZE_1000_US, 0xFFFF});
                // hal_sleep();                
             }
@@ -649,7 +707,7 @@ void ping()
     }
 }
 
-void getRangingResults()
+void getRangingResults(bool differential)
 {
     PacketStatus_t p;
     Radio.GetPacketStatus(&p);
@@ -658,6 +716,7 @@ void getRangingResults()
     double rawRangingRes = Radio.GetRangingResult(RANGING_RESULT_RAW);
     int8_t rssi = p.LoRa.RssiPkt;
     int8_t snr = p.LoRa.SnrPkt;
+    char header = differential?'^':'*';
     double skew = convertFeiToPpm(fei);
     double correctedDistance = correctFei(rawRangingRes, fei);
 
@@ -674,21 +733,26 @@ void getRangingResults()
         // correctedDistance = correctedDistanceStack.getMean();
     }
     // printf("Ranging delta threshold: %d\r\n", Radio.GetRangingPowerDeltaThresholdIndicator());
-    printf("*%d|%d.%d|%d|%d.%d|%d|%d|%u|%u|%d|%d|%u|%llu\r\n", 
-            slaveIndex,
-            (int) INT(rawRangingRes), 
-            (int) DEC(rawRangingRes), 
-            (int) INT(fei), 
-            (int) INT(skew),
-            (int) DEC(skew),
-            rssi, 
-            snr, 
-            calibration, 
-            Channels[channelIdx], 
-            currentSf >> 4,
-            getBW(currentBw),
-            pLength,
-            rangingClock.elapsed_time().count());   
+    // printf("%c%d|%d|%d.%d|%d.%d|%d|%d.%d|%d|%d|%u|%u|%d|%d|%d|%u|%llu\r\n", 
+    //         header,
+    //         masterIndex,
+    //         slaveIndex,
+    //         (int) INT(rawRangingRes), 
+    //         (int) DEC(rawRangingRes), 
+    //         (int) INT(correctedDistance),
+    //         (int) DEC(correctedDistance),
+    //         (int) INT(fei), 
+    //         (int) INT(skew),
+    //         (int) DEC(skew),
+    //         rssi, 
+    //         snr, 
+    //         calibration, 
+    //         Channels[channelIdx], 
+    //         currentSf >> 4,
+    //         getBW(currentBw),
+    //         txPower,
+    //         pLength,
+    //         rangingClock.elapsed_time().count());   
     uint8_t deltaThold = Radio.GetRangingPowerDeltaThresholdIndicator();
     double rssiCorrection = Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
         currentSf,
@@ -701,15 +765,15 @@ void getRangingResults()
 
 
 
-    // printf("{\"distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"snr\":%d, \"calibration\":%u, \"frequency\":%u,\"sf\":%d, \"bw\":%d\r\n",
-    //         (int) INT(rawRangingRes), 
-    //         (int) DEC(rawRangingRes), 
-    //         (int) INT(fei), 
-    //         rssi, snr, 
-    //         calibration, 
-    //         Channels[channelIdx], 
-    //         currentSf >> 4,
-    //         getBW(currentBw));
+    printf("{\"distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"snr\":%d, \"calibration\":%u, \"frequency\":%u,\"sf\":%d, \"bw\":%d}\r\n",
+            (int) INT(rawRangingRes), 
+            (int) DEC(rawRangingRes), 
+            (int) INT(fei), 
+            rssi, snr, 
+            calibration, 
+            Channels[channelIdx], 
+            currentSf >> 4,
+            getBW(currentBw));
 }
 
 
@@ -735,31 +799,48 @@ void onRangingDone(IrqRangingCode_t code)
     sysClock.reset();
     sysClock.start();
     debug_print("Ranging done %d\r\n", code);
-    if (myType == PASSIVE_SLAVE_DEVICE)
+    if (code == IRQ_ADVANCED_RANGING_DONE)
     {
+        uint32_t receivedAddress;
         Radio.DisableAdvancedRanging();
-        // getAdvancedRangingResult();
-        getRangingResults();
-        slaveIndex = getMasterIndex();
-        printf("Last address received: %d\r\n", slaveIndex);     
-        if (slaveIndex != -1)
+        receivedAddress = Radio.GetAdvancedRangingAddress();
+        printf("Received address: %08x\r\n", (int) receivedAddress);
+        masterIndex = getMasterIndex(receivedAddress);
+        slaveIndex = getSlaveIndex(receivedAddress);
+        printf("Last addresses received: master: %d slave: %d\r\n", masterIndex, slaveIndex);     
+        getRangingResults(true);
+        if (masterIndex != -1)
         {
-            feiTable[slaveIndex] = Radio.GetFrequencyError();
+            feiTable[masterIndex] = Radio.GetFrequencyError();
         }
         else
         {
             printf("/!\\ Unknown address received\r\n");
-        }           
+        }    
 
-        // double raw = Radio.GetAdvancedRangingResult(RANGING_RESULT_RAW);
-        // printf("%d.%d\r\n", (int) INT(raw), (int) DEC(raw) );
-        lastEvent = SLAVE_DONE;
+        if (!SINGLE_SLAVE_MODE && (masterIndex > 0) && ( (masterIndex % TOTAL_SLAVES) + 1 == DEVICE_ID) )
+        {
+            printf("It's my Turn ! \r\n");
+            role = SLAVE_DEVICE;
+            setIRQs();
+            initAddresses();
+        }  
+        lastEvent = PASSIVE_SLAVE_DONE;
     }
-    else if ( (code == IRQ_RANGING_SLAVE_ERROR_CODE) || (code == IRQ_RANGING_MASTER_ERROR_CODE) )
+    else if ( (code == IRQ_RANGING_SLAVE_ERROR_CODE) || (code == IRQ_RANGING_MASTER_ERROR_CODE))
     {
         printf("Ranging timeout: %d; %d; %d, %d\r\n", code, rangingCounter, channelIdx, (int) code);  
         lastEvent = TIMEOUT;
         successiveTimeouts++;
+    }
+
+    else if (code == IRQ_RANGING_SLAVE_INVALID_ADDRESS)
+    {
+        printf("That message was not for me\r\n");
+        lastEvent = REQUEST_IGNORED;
+        setMasterAddress(DEVICE_ID, 0);
+        setSlaveAddress(DEVICE_ID);
+
     }
 
     else if (code == IRQ_RANGING_MASTER_VALID_CODE)
@@ -768,11 +849,23 @@ void onRangingDone(IrqRangingCode_t code)
         lastEvent = MASTER_DONE;
         resultPending = true;
         getRangingResults();
+        if ( !SINGLE_SLAVE_MODE && (myType == SLAVE_DEVICE) && (TOTAL_SLAVES > 1))
+        // if (DEVICE_ID == 2)
+        {
+            printf("Im device %d, going passive\r\n", DEVICE_ID);
+            role = PASSIVE_SLAVE_DEVICE;
+            // acceptAllRequests();
+        }
+        else
+        {
+            role = SLAVE_DEVICE;
+        }
     }
 
-    else if ( (code == IRQ_RANGING_SLAVE_VALID_CODE) || (code == IRQ_ADVANCED_RANGING_DONE) )
+    else if (code == IRQ_RANGING_SLAVE_VALID_CODE)
     {
         lastEvent = SLAVE_DONE;
+        role = MASTER_DEVICE;
     }
     rangingDone = true;
     if (myType != PASSIVE_SLAVE_DEVICE)

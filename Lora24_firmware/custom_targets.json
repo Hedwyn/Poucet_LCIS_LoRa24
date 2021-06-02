@@ -1,0 +1,55 @@
+{
+    "MCU_STM32L1B": {
+        "inherits": [
+            "MCU_STM32"
+        ],
+        "public": false,
+        "core": "Cortex-M3",
+        "extra_labels_add": [
+            "STM32L1B"
+        ],
+        "config": {
+            "clock_source": {
+                "help": "Mask value : USE_PLL_HSE_EXTC | USE_PLL_HSE_XTAL (need HW patch) | USE_PLL_HSI",
+                "value": "USE_PLL_HSE_EXTC|USE_PLL_HSI",
+                "macro_name": "CLOCK_SOURCE"
+            }
+        },
+        "macros_add":["TARGET_STM32L1"],
+        "overrides": {
+            "gpio_reset_at_init": true
+        },
+        "device_has_add": [
+            "ANALOGOUT",
+            "SERIAL_ASYNCH",
+            "FLASH",
+            "MPU"
+        ]
+    },
+    "MCU_STM32L151xBA": {
+        "inherits": [
+            "MCU_STM32L1B"
+        ],
+        "public": false,
+        "extra_labels_add": [
+            "STM32L151xB","STM32L151xBA"
+        ],
+        "macros_add": [
+            "STM32L151xBA"
+        ]
+        
+    },
+    "IMST282A": {
+        "inherits": [
+            "MCU_STM32L151xBA"
+        ],
+        "device_name": "IMST282A",
+        "detect_code": [
+            "6143"
+        ],
+        "extra_labels_add": [
+            "IMST282A"
+        ]
+    }
+
+}

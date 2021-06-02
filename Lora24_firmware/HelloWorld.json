@@ -1,0 +1,9 @@
+{"File Description": [
+    "Contains the build configuration for this project.",
+     "The list of directories to include during the compilation process is given in the field name ProjectLibs.",
+     "The OS as well as the libraries provided in Drivers will be built as a static library and linked during project compilation.",
+     "Regular compilations will NOT rebuilt the libraries given in Drivers. if you want to re-build the drivers, please proceed to a clean build (See Documentation) "
+    ]
+}
+{"OS": "mbed-os", "Drivers":[], "ProjectLibs": ["HelloWorld"], "Default build profile": "release"}
+

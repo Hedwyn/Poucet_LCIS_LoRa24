@@ -163,12 +163,12 @@ void SX1280::SetAdvancedRanging(TickTime_t timeout )
 uint32_t SX1280::GetAdvancedRangingAddress()
 {
     uint32_t RangingAddressReceived;
-    WriteRegister(0x927, (ReadRegister(0x927) & 0xFC) | 0x00);
-    RangingAddressReceived = ReadRegister(0x960);
-    RangingAddressReceived |= (ReadRegister(0x95F) << 8);
     WriteRegister(0x927, (ReadRegister(0x927) & 0xFC) | 0x01);
-    RangingAddressReceived |= (ReadRegister(0x960) << 16);
+    RangingAddressReceived = ReadRegister(0x960);
     RangingAddressReceived |= (ReadRegister(0x95F) << 24);
+    WriteRegister(0x927, (ReadRegister(0x927) & 0xFC) | 0x00);
+    RangingAddressReceived |= (ReadRegister(0x960) << 16);
+    RangingAddressReceived |= (ReadRegister(0x95F) << 8);
     return(RangingAddressReceived);
 }
 
@@ -1242,7 +1242,7 @@ void SX1280::ProcessIrqs( void )
                     {
                         if( rangingDone != NULL )
                         {
-                            rangingDone( IRQ_RANGING_SLAVE_ERROR_CODE );
+                            rangingDone( IRQ_RANGING_SLAVE_INVALID_ADDRESS );
                         }
                     }
                     if( ( irqRegs & IRQ_RANGING_SLAVE_REQUEST_VALID ) == IRQ_RANGING_SLAVE_REQUEST_VALID )

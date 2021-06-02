@@ -6,13 +6,13 @@ import sys
 import time
 import random
 
-PORT1 = 'COM4'
-PORT2 = 'COM2'
+PORT1 = 'COM3'
+PORT2 = 'COM4'
 LOGS_DIR = "Logs/"
 
 log = None
-TOTAL_RANGINGS = 400
-topics = ["distance", "fei", "skew", "rssi", "snr", "calibration", "frequency", "sf", "bw", "preamble-length", "duration"]
+TOTAL_RANGINGS = 2400
+topics = ['master_id', 'node_id', "distance", "filtered_distance", "fei", "skew", "rssi", "snr", "calibration", "frequency", "sf", "bw","tx_power", "preamble-length", "duration"]
 
 
 def parse_json(line):
@@ -47,9 +47,9 @@ def read_serial(com_port, f = None):
                 print("Ctrl + C received, exitting")
                 exit_flag = True
                 break
-            if line[0] == '{' or (line[0] == '*' and len(line) >= len(topics) ):
+            if (len(line) > 0) and (line[0] == '{' or (line[0] == '*' and len(line) >= len(topics) )):
                 sample_ctr += 1
-                if line[0] == '*':
+                if (line[0] == '*') or (line[0] == '^'):
                     sample = parse_json(line[1:])
                     print(sample)
                 else:
@@ -86,6 +86,7 @@ if __name__ == "__main__":
             t2.join()
     
     else:
+        print("go")
         t1 = Thread(target = read_serial, args = (PORT1,), daemon = True)
         t2 = Thread(target = read_serial, args = (PORT2,), daemon = True)      
         t1.start()

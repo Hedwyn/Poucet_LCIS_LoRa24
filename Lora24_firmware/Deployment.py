@@ -25,6 +25,8 @@ import os, string
 import sys
 import json
 from shutil import copyfile, rmtree
+import time
+import argparse
 
 class Os(Enum):
     WIN = 0
@@ -34,7 +36,7 @@ class Os(Enum):
 local_os = Os.WIN
 
 DEVICE_MODEL = 'NODE_L432KC'
-DEVICE_MODELS = ['L432KC', 'L476RG', 'L073RZ']
+DEVICE_MODELS = ['L432KC', 'L476RG', 'L152RE']
 MAKE_CALL = "make all BIN="
 BIN_EXTENSION = ".bin"
 MASTER_BIN_PREFIX = "Master"
@@ -53,7 +55,7 @@ DEVICE_ID_MACRO_NAME = "DEVICE_ID"
 TOTAL_SLAVES_MACRO_NAME = "TOTAL_SLAVES" 
 FIRMWARE_DIR = "Firmware"
 TARGET = "NUCLEO_L432KC"
-TARGETS = ["NUCLEO_L432KC", "NUCLEO_L476RG", "NUCLEO_L073RZ"]
+TARGETS = ["NUCLEO_L432KC", "NUCLEO_L476RG", "NUCLEO_L152RE"]
 TOOLCHAIN = "GCC_ARM"
 PROJECT_NAME = "SX1280"
 APP_CONFIG_FILE = "mbed_app.json"
@@ -118,9 +120,11 @@ def build_drivers(config, clean = False, target = TARGET):
     cmd += " --source " + config.os_path
     for driver in config.drivers_path:
         cmd += " --source " + driver
-    
-    cmd += " --library"
 
+    # assigning custom targets dir
+    cmd += " --custom-targets ."  
+
+    cmd += " --library"
     if config.profile:
         cmd += " --profile " + config.profile
     if clean:
@@ -143,15 +147,22 @@ def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean 
     for lib in config.project_libs:
         cmd += " --source " + lib
     
+   
     if os.path.exists(static_libs_path):
         cmd += " --source " + static_libs_path 
     else:
         print("OS and drivers have not been built yet. Proceeding to build them.")
         build_drivers(config, clean = clean, target = target)
+        # waiting for linker script generation
+        time.sleep(2)
+
+    # assigning custom targets dir
+    cmd += " --custom-targets ."
 
     # setting the target
-    cmd += " --target " + target
-    cmd += " -D" + target
+    if target:
+        cmd += " --target " + target
+        cmd += " -D" + target
 
     # defining the device ID and the total number of slaves
     cmd += " -D" + DEVICE_ID_MACRO_NAME + "=" + str(id) + " -D" + TOTAL_SLAVES_MACRO_NAME + "=" + str(total_slaves)
@@ -274,13 +285,12 @@ def associate_bins_to_drives(ordering_list = None):
         drive_to_bin_dic[stm32] = bin_name, target
     return(drive_to_bin_dic)
 
-def deploy(build_config_path = BUILD_CONFIG_PATH, ordering_list = None, total_slaves = None, clean_drivers = False):
+def deploy(project_conf, ordering_list = None, total_slaves = None, clean_drivers = False):
     drive_to_bin_dic = associate_bins_to_drives(ordering_list)
     devices_path = [drive for drive in drive_to_bin_dic]
     bin_names = [drive_to_bin_dic[drive][0] + BIN_EXTENSION for drive in drive_to_bin_dic]
     targets = [drive_to_bin_dic[drive][1] for drive in drive_to_bin_dic]
     total_devices = len(devices_path)
-    project_conf = parse_build_config(build_config_path)
 
     if clean_drivers:
         clean_drivers_build(project_conf)
@@ -302,35 +312,69 @@ def n_compile(project_conf, n, targets = None, total_slaves = None):
         else:
             compile(i, total_slaves, project_conf)
 
+def st_link_flash(conf_path, id = 0, total_slaves = 0, target = 'IMST282A'):
+    conf = parse_build_config(conf_path)
+    compile(id, total_slaves, conf, target, clean = True)
 
 
         
 
 if __name__ == "__main__":
-    argc = len(sys.argv)
+    parser = argparse.ArgumentParser(description = "Manages and automates the compilation and deployment of LoRa 2.4 GHz Ranging transceivers firmware. By default, auto-detects the connected targetrs, then compiles and deploys the selected project firmware")
+    parser.add_argument('project', help = "Builds the project defined in the json configuration file passed as argument.")
+    parser.add_argument("-b", "--build", help = "Compiles without flashing. You should pass the total number of nodes to compile for as argument", type = int)
+    parser.add_argument("-c", "--clean", help = "Cleans previous builds of the target project and related dependencies", action = "store_true")
+    parser.add_argument("-t", "--target", help = "Cleans previous builds of the target project and related dependencies")
 
-    # default arguments 
-    total_slaves = None
-    build_config_path = BUILD_CONFIG_PATH
-    clean = False
+    args = parser.parse_args()
 
-    for idx, argv in enumerate(sys.argv[1:]):
-        if argv[0] == "-":
-            # flag detected
-            if argv[1:] == "build":
-                build_config_path = sys.argv[idx + 2]
+    if args.project:
+        config = parse_build_config(args.project)
+        if args.target:
+            target = args.target
+        else:
+            target = TARGETS[0]
+        if args.clean:
+            clean_drivers_build(config)
+        if args.build:
+            targets = [target] * args.build
+            n_compile(config, args.build, targets, total_slaves = args.build)
+        else:
+            deploy(config)
+    else:
+        print("No argument given. You should pass a project description json file as argument. Quitting")
+        parser.print_help()
 
-            if argv[1:] == "rebuild":
-                build_config_path = sys.argv[idx + 2]
-                clean = True
+    # argc = len(sys.argv)
 
-            elif argv[1:] == "total_slaves":
-                try:
-                    total_slaves = int(argv[idx + 2])
-                except:
-                    print("Please provided an integer value for the total number of slaves")
+    # # default arguments 
+    # total_slaves = None
+    # build_config_path = BUILD_CONFIG_PATH
+    # clean = False
+
+    # for idx, argv in enumerate(sys.argv[1:]):
+    #     if argv[0] == "-":
+    #         # flag detected
+    #         if argv[1:] == "build":
+    #             build_config_path = sys.argv[idx + 2]
+
+    #         if argv[1:] == "rebuild":
+    #             build_config_path = sys.argv[idx + 2]
+    #             clean = True
+            
+    #         if argv[1:] == "stlink":
+    #             build_config_path = sys.argv[idx + 2]
+    #             st_link_flash(build_config_path)
+    #             sys.exit()
+
+
+    #         elif argv[1:] == "total_slaves":
+    #             try:
+    #                 total_slaves = int(argv[idx + 2])
+    #             except:
+    #                 print("Please provided an integer value for the total number of slaves")
          
-    deploy(build_config_path = build_config_path, total_slaves =  total_slaves, clean_drivers = clean)
+    # deploy(build_config_path = build_config_path, total_slaves =  total_slaves, clean_drivers = clean)
 
 
 
