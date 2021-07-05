@@ -1352,6 +1352,7 @@ public:
      */
     void SetTxParams( int8_t power, RadioRampTimes_t rampTime );
 
+
     /*!
      * \brief Sets the number of symbols to be used for Channel Activity
      *        Detection operation
@@ -1360,6 +1361,7 @@ public:
      *                            Detection operations [LORA_CAD_01_SYMBOL, LORA_CAD_02_SYMBOLS,
      *                            LORA_CAD_04_SYMBOLS, LORA_CAD_08_SYMBOLS, LORA_CAD_16_SYMBOLS]
      */
+    
     void SetCadParams( RadioLoRaCadSymbols_t cadSymbolNum );
 
     /*!

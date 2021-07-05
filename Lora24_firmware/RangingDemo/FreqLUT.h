@@ -1,4 +1,4 @@
-#define CHANNELS 40
+#define CHANNELS 80
 
 /*
  * Frequency look up table :

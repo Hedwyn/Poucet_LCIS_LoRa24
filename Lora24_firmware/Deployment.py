@@ -338,7 +338,7 @@ if __name__ == "__main__":
             clean_drivers_build(config)
         if args.build:
             targets = [target] * args.build
-            n_compile(config, args.build, targets, total_slaves = args.build)
+            n_compile(config, args.build, targets)
         else:
             deploy(config)
     else:

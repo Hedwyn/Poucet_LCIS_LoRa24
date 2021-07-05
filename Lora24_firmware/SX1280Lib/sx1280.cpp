@@ -260,6 +260,7 @@ void SX1280::SetTxParams( int8_t power, RadioRampTimes_t rampTime )
     WriteCommand( RADIO_SET_TXPARAMS, buf, 2 );
 }
 
+
 void SX1280::SetCadParams( RadioLoRaCadSymbols_t cadSymbolNum )
 {
     WriteCommand( RADIO_SET_CADPARAMS, ( uint8_t* )&cadSymbolNum, 1 );

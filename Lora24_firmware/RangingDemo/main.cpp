@@ -17,34 +17,35 @@
 
 #define BAUDRATE 115200
 #define BUFFER_SIZE 255
-
+// #define SPEED_OF_LIGHT 299705000.
 #define FLOAT_DECIMALS 4
 #define FLOAT_MAX_DIGITS 20
 #define FLOAT_EXPONENT pow(10, FLOAT_DECIMALS)
 #define INT(_FLOAT) (trunc(_FLOAT))
 #define DEC(_FLOAT) (FLOAT_EXPONENT * fabs(_FLOAT - INT(_FLOAT)) )
 
-#define INTER_RANGING_DELAY 50     /**<Master sleep time in-between each ranging*/
-#define CHANNEL_SWITCH 0            /**<If enabled, the transceiver will switch channels after a given number of rangings*/
-#define RANGINGS_PER_ROTATION 100    /**<Number of ranging protocols held before switching channels. Does nothing if channel rotation is off*/
-#define MAX_TIMEOUTS 5              /**<After that number of timeouts the transceiver will go back to default parameters*/
-#define CHANNEL_INCREMENT 5         /**<Value by which the channel index is incremented at each channel rotation. If superior to 1, some channels will be skipped */
-#define CHANNEL_WIDTH 2000000       /**<Bandwidth of LoRa 2.4 Ghz channels */
-#define ORDER_CHANNELS 0             /**<When enabled, the channel rotation goes linearily from lowest to highest frequency. Otherwise, the channel order is a random permutation of available channels */
-#define BOTTOM_FREQUENCY 2402000000 /**<Center frequency of the lowest channel available for LoRa 2.4 GHz */
+#define INTER_RANGING_DELAY 20     /**<Master sleep time in-between each ranging*/
+#define CHANNEL_SWITCH 0           /**<If enabled, the transceiver will switch channels after a given number of rangings*/
+#define RANGINGS_PER_ROTATION 10    /**<Number of ranging protocols held before switching channels. Does nothing if channel rotation is off*/
+#define MAX_TIMEOUTS 10              /**<After that number of timeouts the transceiver will go back to default parameters*/
+#define CHANNEL_INCREMENT 1         /**<Value by which the channel index is incremented at each channel rotation. If superior to 1, some channels will be skipped */
+#define CHANNEL_WIDTH 1000000       /**<Bandwidth of LoRa 2.4 Ghz channels */
+#define ORDER_CHANNELS 1             /**<When enabled, the channel rotation goes linearily from lowest to highest frequency. Otherwise, the channel order is a random permutation of available channels */
+#define BOTTOM_FREQUENCY 2400000000 /**<Center frequency of the lowest channel available for LoRa 2.4 GHz */
 #define SYMBOL_LENGTH_SF5 197       /**<Symbol length for SF5 in microseconds. Increasing SF by 1 doubles that length */
-#define SPEED_OF_LIGHT 3E8          /**<Speed of light in m/s*/
+// #define SPEED_OF_LIGHT 3E8          /**<Speed of light in m/s*/
 #define ENABLE_FILTERING 0 
-#define SINGLE_SLAVE_MODE   0         /**<If enabled, only one slave is defined. Node IDs above 1 will be started as passive slaves performing differential ranging */
-#define DEFAULT_TX_POWER 13 /**<Default Tx power, in Dbm */
+#define SINGLE_SLAVE_MODE   1         /**<If enabled, only one slave is defined. Node IDs above 1 will be started as passive slaves performing differential ranging */
+#define DEFAULT_TX_POWER 6 /**<Default Tx power, in Dbm */
+#define DEFAULT_LNA_GAIN 8
 #define ADDRESS_NUMBER_OF_BITS_REGISTER 0x931
 #define MOVING_MEDIAN_LENGTH 20
 // #define WAIT_INPUT
 #define DEBUG 0
 #define VERBOSE 0
 
-#define RNG_TIMER_MS 450 //384
-#define RNG_TIMEOUT 500
+#define RNG_TIMER_MS 800 //384
+#define RNG_TIMEOUT 400
 #define debug_print(fmt, ...) \
             do { if (DEBUG) printf(fmt, ##__VA_ARGS__); } while (0)
 #define verbose_print(fmt, ...) \
@@ -60,16 +61,20 @@
     #define DEVICE_ID 0
 #endif 
 
+
+
 /** Physical layers default paramaters */
-const int8_t defaultTxPower = 13;
+const int8_t defaultTxPower = 10;
+const float SPEED_OF_LIGHT = 299705000.;
+const float PI = 3.14159;
 
 /** index of the current slave address */
 int slaveIndex, masterIndex;
 bool myTurn = true;
 
 
-const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF9;
-const RadioLoRaBandwidths_t defaultBw = LORA_BW_0400;
+const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF7;
+const RadioLoRaBandwidths_t defaultBw = LORA_BW_1600;
 const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
 
 /*!
@@ -78,7 +83,7 @@ const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
  */
 const uint16_t RNG_CALIB_0400[] = { 10299,  10271,  10244,  10242,  10230,  10246  };
 const uint16_t RNG_CALIB_0800[] = { 11486,  11474,  11453,  11426,  11417,  11401  };
-const uint16_t RNG_CALIB_1600[] = { 13308,  13493,  13528,  13515,  13430,  13376  };
+const uint16_t RNG_CALIB_1600[] = { 13308,  13276,  13275,  13275,  13230,  13167  };
 const double   RNG_FGRAD_0400[] = { -0.148, -0.214, -0.419, -0.853, -1.686, -3.423 };
 const double   RNG_FGRAD_0800[] = { -0.041, -0.811, -0.218, -0.429, -0.853, -1.737 };
 const double   RNG_FGRAD_1600[] = { 0.103,  -0.041, -0.101, -0.211, -0.424, -0.87  };
@@ -163,14 +168,16 @@ int getSlaveIndex();
 int getBW(RadioLoRaBandwidths_t bw);
 void acceptAllRequests();
 
+const int WATCHDOG_TIMEOUT = 1000000; // us
 Timer rangingClock;
 Timer sysClock;
+Timer watchdog;
 bool clock_on = false;
 int rangingCounter = 0;
 int8_t txPower = DEFAULT_TX_POWER;
+int8_t lnaGain = DEFAULT_LNA_GAIN;
+int lnaGainValues[] = {0, 0, 6, 12, 18, 24, 30, 36, 42, 46, 48, 50, 52, 54};
 
-
-DigitalOut TX_LED( A4 );
 enum DeviceType{
     MASTER_DEVICE,
     SLAVE_DEVICE,
@@ -215,8 +222,11 @@ RadioCallbacks_t Callbacks =
 BufferedSerial pc( USBTX, USBRX );
 #ifdef NUCLEO_L432KC
     SX1280Hal Radio( D11, D12, D13, D10, D7, D9, NC, NC, A0, &Callbacks ); // L432_KC
-#else // NUCLEO_476RG
+#elif defined(NUCLEO_L476RG)
+    DigitalOut ANT_SW( A3 ); // antenna diversity switch
     SX1280Hal Radio( D11, D12, D13, D7, D3, D5, NC, NC, A0, &Callbacks );
+#elif defined(IMST282A)
+    SX1280Hal Radio( PA_7, PA_6, PA_5, PA_4, PB_0, PB_1, NC, NC, PA_1, &Callbacks );
 #endif
 ModulationParams_t modulationParams;
 
@@ -268,12 +278,43 @@ void dumpRssiCalibration()
 }
 #endif
 
+double correctLnaGain(double distance, int lnaGain)
+{
+    int gain = lnaGainValues[lnaGain];
+    if (lnaGain >= 10)
+    {
+        distance -= 5.8;
+    }
+    else if (lnaGain >= 7)
+    {
+        distance -= 3;
+    }
+    else {
+        distance -= 0.2 * (6 - lnaGain);
+    }
+    return(distance);
+}
+
 double convertFeiToPpm(double fei)
 {
     double freq = Channels[channelIdx];
     /* converting fei to ppm */
     double ppm = (1E6 * fei / freq);
     return(ppm);
+}
+
+double computeChannelPhase(double distance, double frequency, double *reminder)
+{
+    double wavelength = SPEED_OF_LIGHT / frequency;
+    double phaseReminder = distance;
+    double phase;
+    while (phaseReminder > wavelength)
+    {
+        phaseReminder -= wavelength;
+    }
+    *reminder = phaseReminder;
+    phase = 2 * PI * (phaseReminder / wavelength); 
+    return(phase);
 }
 
 double correctFei(double distance, double fei)
@@ -348,6 +389,9 @@ int getBW(RadioLoRaBandwidths_t bw)
 int main() {
     uint8_t role; 
     pc.set_baud(BAUDRATE);
+#if defined(NUCLEO_L476RG)
+    ANT_SW = 1;
+#endif
 
 #ifdef WAIT_INPUT
     bool ready = false;
@@ -420,6 +464,8 @@ void initRadio()
     modulationParams.Params.LoRa.CodingRate = defaultCr;
     
     Radio.SetLNAGainSetting(LNA_HIGH_SENSITIVITY_MODE);
+    Radio.EnableManualGain();
+    Radio.SetManualGainValue(lnaGain);
 
     Radio.SetInterruptMode();
     printf("IRQ Set\r\n");
@@ -458,21 +504,21 @@ void setRadio(ModulationParams_t modulation)
     switch( modulation.Params.LoRa.Bandwidth )
     {
         case LORA_BW_0400:
-            requestDelay = RNG_TIMER_MS >> ( 0 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
+            // requestDelay = RNG_TIMER_MS >> ( 0 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
             calibration = RNG_CALIB_0400[sfIndex];
             break;
 
         case LORA_BW_0800:
-            requestDelay  = RNG_TIMER_MS >> ( 1 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
+            // requestDelay  = RNG_TIMER_MS >> ( 1 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
             calibration = RNG_CALIB_0800[sfIndex];
             break;
 
         case LORA_BW_1600:
-            requestDelay  = RNG_TIMER_MS >> ( 2 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
+            // requestDelay  = RNG_TIMER_MS >> ( 2 + 10 - ( modulation.Params.LoRa.SpreadingFactor >> 4 ) );
             calibration = RNG_CALIB_1600[sfIndex];
             break;
     }    
-    // calibration = 13138;
+    // calibration = 13230;
     requestDelay = INTER_RANGING_DELAY;
     if (myType == MASTER_DEVICE)
     {
@@ -480,7 +526,6 @@ void setRadio(ModulationParams_t modulation)
     }
     else
     {
-        // calibration = 13258;
         Radio.SetRangingCalibration(calibration);
     }
 }
@@ -612,9 +657,19 @@ void ping()
     setIRQs();
     lastEvent = TIMEOUT;
     int slaveCounter = 0;
+    watchdog.start();
     while (true)
     {
+        if (watchdog.elapsed_time().count() > WATCHDOG_TIMEOUT)
+        {
+            lastEvent = TIMEOUT;
+            printf("Watchdog reached timeout\r\n\n");
+            watchdog.reset();
+            // compensating for the missed ranging
+            rangingCounter++;
+        }
         thread_sleep_for(1);
+        // printf("Watchdog time %llu\r\n", watchdog.elapsed_time().count() );
 
         if (lastEvent != NONE)
         {
@@ -628,6 +683,8 @@ void ping()
                     /* restarting whole process */
                     channelIdx = 0;
                     Radio.SetRfFrequency(Channels[channelIdx]);
+                    txPower = DEFAULT_TX_POWER;
+                    lnaGain = DEFAULT_LNA_GAIN;
                     rangingCounter = 0;
                 }
             }
@@ -641,24 +698,29 @@ void ping()
                 
                 if (role == myType) 
                 {
-                    rangingCounter += 1;
+                    // rangingCounter += 1;
                     /* Channel rotation */
+                    ANT_SW = !ANT_SW;
                     if ( CHANNEL_SWITCH && ( rangingCounter % RANGINGS_PER_ROTATION == 0) )
                     {
-                        if (txPower > 0)
-                            txPower --;
-                        Radio.SetTxParams(txPower, RADIO_RAMP_20_US );
+                        // lnaGain = (lnaGain == 13)?DEFAULT_LNA_GAIN:(lnaGain + 1); 
+                        // txPower =  6 + lnaGainValues[DEFAULT_LNA_GAIN] - lnaGainValues[lnaGain];
+                        // txPower = (txPower > 12)?7:txPower + 1;
+                        // txPower = (txPower == -18)?6:txPower - 6;
+                        // Radio.SetManualGainValue(lnaGain);
+                        // Radio.SetTxParams(txPower, RADIO_RAMP_20_US );
                         // printf("Switching channel \r\n");
-                        // channelIdx = (channelIdx + CHANNEL_INCREMENT) % CHANNELS;
-                        // if (ORDER_CHANNELS)
-                        // {
-                        //     channelFreq = BOTTOM_FREQUENCY + channelIdx * CHANNEL_WIDTH;
-                        //     Radio.SetRfFrequency(channelFreq);
-                        // }
-                        // else
-                        // {
-                        //     Radio.SetRfFrequency(Channels[channelIdx]);
-                        // }
+                        channelIdx = (channelIdx + CHANNEL_INCREMENT) % CHANNELS;
+                        if (ORDER_CHANNELS)
+                        {
+                            channelFreq = BOTTOM_FREQUENCY + channelIdx * CHANNEL_WIDTH;
+                            Radio.SetRfFrequency(channelFreq);
+                        }
+                        else
+                        {
+                            channelFreq = Channels[channelIdx];
+                            Radio.SetRfFrequency(channelFreq);
+                        }
                         // if (myType == MASTER_DEVICE)
                         // {
                         //     Radio.SetRangingCalibration(calibration);            
@@ -669,7 +731,7 @@ void ping()
 
             if (role == MASTER_DEVICE) {
                 feiTable[slaveIndex] = Radio.GetFrequencyError();
-                printf("Saving fei: %f\r\n", feiTable[slaveIndex]);
+                debug_print("Saving fei: %f\r\n", feiTable[slaveIndex]);
                 if (myType == MASTER_DEVICE)
                 { 
                     if (!SINGLE_SLAVE_MODE && (TOTAL_SLAVES > 1) && (slaveCounter++ % 1 == 0) )
@@ -678,7 +740,7 @@ void ping()
                         setMasterAddress(0, slaveIndex);
                     }
                 }
-                printf("Setting Master...[%d]\r\n", DEVICE_ID);
+                verbose_print("Setting Master...[%d]\r\n", DEVICE_ID);
                 thread_sleep_for(requestDelay);
                 rangingClock.reset();     
                 rangingClock.start();
@@ -687,14 +749,14 @@ void ping()
             }
 
             else if (role == SLAVE_DEVICE) {  
-                printf("Setting Slave...\r\n");                 
+                verbose_print("Setting Slave...\r\n");                 
                 Radio.SetRx((TickTime_t){RADIO_TICK_SIZE_1000_US, ( 2 *TOTAL_DEVICES) *  requestDelay});
                 // hal_sleep();            
             }
 
             else if (role == PASSIVE_SLAVE_DEVICE)
             {
-                printf("Setting passive Slave...\r\n");    
+                verbose_print("Setting passive Slave...\r\n");    
                 setIRQs();
                 acceptAllRequests();   
                 thread_sleep_for(2);
@@ -719,6 +781,9 @@ void getRangingResults(bool differential)
     char header = differential?'^':'*';
     double skew = convertFeiToPpm(fei);
     double correctedDistance = correctFei(rawRangingRes, fei);
+    correctedDistance = correctLnaGain(correctedDistance, lnaGain);
+    double phase, phaseDistance;
+    phase = computeChannelPhase(rawRangingRes, Channels[channelIdx], &phaseDistance);
 
     if (ENABLE_FILTERING)
     {
@@ -754,26 +819,37 @@ void getRangingResults(bool differential)
     //         pLength,
     //         rangingClock.elapsed_time().count());   
     uint8_t deltaThold = Radio.GetRangingPowerDeltaThresholdIndicator();
-    double rssiCorrection = Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
-        currentSf,
-        currentBw,
-        Radio.GetRangingPowerDeltaThresholdIndicator());
-    double correctedDistanceRssi = correctedDistance + rssiCorrection;
+    // double rssiCorrection = Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
+    //     currentSf,
+    //     currentBw,
+    //     Radio.GetRangingPowerDeltaThresholdIndicator());
+    // double correctedDistanceRssi = correctedDistance + rssiCorrection;
 
-    printf("Corrected distance (FEI): %d.%d\r\n\n", (int) INT(correctedDistance), (int) DEC(correctedDistance));
-    printf("Delta threshold: %d, Corrected distance (RSSI): %d.%d\r\n\n", (int) deltaThold, (int) INT(correctedDistanceRssi), (int) DEC(correctedDistanceRssi));
+    // printf("Corrected distance (FEI): %d.%d\r\n\n", (int) INT(correctedDistance), (int) DEC(correctedDistance));
+    // printf("Delta threshold: %d, Corrected distance (RSSI): %d.%d\r\n\n", (int) deltaThold, (int) INT(correctedDistanceRssi), (int) DEC(correctedDistanceRssi));
 
 
 
-    printf("{\"distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"snr\":%d, \"calibration\":%u, \"frequency\":%u,\"sf\":%d, \"bw\":%d}\r\n",
+    printf("{\"distance\":%d.%d, \"corrected_distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"delta_rssi\":%d, \"snr\":%d, \"frequency\":%u, \"txPower\":%d, \"LNA_gain\":%u, \"phase\":%d.%d, \"phase_equivalent_distance\":%d.%d}\r\n",
             (int) INT(rawRangingRes), 
             (int) DEC(rawRangingRes), 
+            (int) INT(correctedDistance),
+            (int) DEC(correctedDistance),
             (int) INT(fei), 
-            rssi, snr, 
-            calibration, 
-            Channels[channelIdx], 
-            currentSf >> 4,
-            getBW(currentBw));
+            rssi, 
+            deltaThold,
+            snr,
+            // calibration, 
+            channelFreq,
+            txPower,
+            lnaGain,
+            (int) INT(phase),
+            (int) DEC(phase),   
+            (int) INT(phaseDistance),
+            (int) DEC(phaseDistance)
+            // currentSf >> 4,
+            // getBW(currentBw)
+            );
 }
 
 
@@ -793,11 +869,14 @@ void onReceptionTimeout()
 void onRangingDone(IrqRangingCode_t code)
 {  
     rangingClock.stop();
-
+    watchdog.reset();
     sysClock.stop();
     debug_print("Elapsed time: %llu\n", sysClock.elapsed_time().count());
     sysClock.reset();
     sysClock.start();
+    if (role == myType)
+        rangingCounter += 1;
+
     debug_print("Ranging done %d\r\n", code);
     if (code == IRQ_ADVANCED_RANGING_DONE)
     {
@@ -832,6 +911,7 @@ void onRangingDone(IrqRangingCode_t code)
         printf("Ranging timeout: %d; %d; %d, %d\r\n", code, rangingCounter, channelIdx, (int) code);  
         lastEvent = TIMEOUT;
         successiveTimeouts++;
+        rangingCounter--;
     }
 
     else if (code == IRQ_RANGING_SLAVE_INVALID_ADDRESS)
@@ -840,6 +920,7 @@ void onRangingDone(IrqRangingCode_t code)
         lastEvent = REQUEST_IGNORED;
         setMasterAddress(DEVICE_ID, 0);
         setSlaveAddress(DEVICE_ID);
+        rangingCounter--;
 
     }
 
