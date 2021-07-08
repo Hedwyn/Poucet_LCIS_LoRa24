@@ -24,7 +24,7 @@
 #define INT(_FLOAT) (trunc(_FLOAT))
 #define DEC(_FLOAT) (FLOAT_EXPONENT * fabs(_FLOAT - INT(_FLOAT)) )
 
-#define INTER_RANGING_DELAY 25     /**<Master sleep time in-between each ranging*/
+#define INTER_RANGING_DELAY 30     /**<Master sleep time in-between each ranging*/
 #define CHANNEL_SWITCH 1           /**<If enabled, the transceiver will switch channels after a given number of rangings*/
 #define RANGINGS_PER_ROTATION 10    /**<Number of ranging protocols held before switching channels. Does nothing if channel rotation is off*/
 #define MAX_TIMEOUTS 10              /**<After that number of timeouts the transceiver will go back to default parameters*/
@@ -37,7 +37,7 @@
 #define ENABLE_FILTERING 0 
 #define SINGLE_SLAVE_MODE   1         /**<If enabled, only one slave is defined. Node IDs above 1 will be started as passive slaves performing differential ranging */
 #define DEFAULT_TX_POWER 6 /**<Default Tx power, in Dbm */
-#define DEFAULT_LNA_GAIN 13
+#define DEFAULT_LNA_GAIN 8
 #define ADDRESS_NUMBER_OF_BITS_REGISTER 0x931
 #define MOVING_MEDIAN_LENGTH 20
 // #define WAIT_INPUT
@@ -68,12 +68,17 @@ const int8_t defaultTxPower = 10;
 const float SPEED_OF_LIGHT = 299705000.;
 const float PI = 3.14159;
 
+/** distance-related parameters */
+const long DISTANCE_RESOLUTION = 1 << 16;
+const long MAX_DIST = 2000; //m
+static int16_t encodedDistance;
+
 /** index of the current slave address */
 int slaveIndex, masterIndex;
 bool myTurn = true;
 
 
-const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF8;
+const RadioLoRaSpreadingFactors_t defaultSf = LORA_SF7;
 const RadioLoRaBandwidths_t defaultBw = LORA_BW_1600;
 const RadioLoRaCodingRates_t defaultCr = LORA_CR_4_8;
 
@@ -160,7 +165,7 @@ void getRangingResults(bool differential = false);
 double convertFeiToPpm(double fei);
 double correctFei(double distance, double fei);
 void initAddresses();
-void setMasterAddress(int masterIdx, int slaveIdx, uint8_t additionalData = 0);
+void setMasterAddress(int masterIdx, int slaveIdx, uint16_t additionalData = 0);
 void setSlaveAddress(int slaveIdx);
 void setBroadcast();
 int getMasterIndex();
@@ -564,15 +569,15 @@ bool setPreambleLength(PacketParams_t params, int length)
 /**
  * @remark Note that setting 0x00000000 as address will lead the node to ignore the address, thus 0 should be avoided unless that's the wanted behavior 
  */
-void setMasterAddress(int masterIdx, int slaveIdx, uint8_t additionalData)
+void setMasterAddress(int masterIdx, int slaveIdx, uint16_t additionalData)
 {
     uint8_t buf[4] =  {};
     /* settings the number of address bits to check to 8 */
     /* Note that the bytes are checked from fourth to first byte of the buffer */
     buf[2] = RANGING_ADDR[masterIdx];
     buf[3] = RANGING_ADDR[slaveIdx];
-    buf[1] =  7;
-    buf[0] = additionalData;
+    buf[1] = (uint8_t) (additionalData & 0xFF00) >> 8;
+    buf[0] = (uint8_t) additionalData & 0x00FF;
     printf("Programmed adress: %02x%02x%02x%02x\r\n", buf[0], buf[1], buf[2], buf[3]);
     Radio.WriteRegister(REG_LR_REQUESTRANGINGADDR, buf, 4);
     masterIndex = masterIdx;
@@ -698,14 +703,7 @@ void ping()
                 {
                     /* restarting whole process */
                     channelIdx = 0;
-                    if (ORDER_CHANNELS)
-                    {
-                        Radio.SetRfFrequency(BOTTOM_FREQUENCY);
-                    }
-                    else 
-                    {
-                        Radio.SetRfFrequency(Channels[channelIdx]);
-                    }
+                    Radio.SetRfFrequency(Channels[channelIdx]);
                     txPower = DEFAULT_TX_POWER;
                     lnaGain = DEFAULT_LNA_GAIN;
                     rangingCounter = 0;
@@ -724,32 +722,14 @@ void ping()
                     if (channelIdx != nextChannelIdx)
                         setChannel(nextChannelIdx);
                     channelIdx = nextChannelIdx;
-
-                    // if (myType == MASTER_DEVICE)
-                    // {
-                    //     setMasterAddress(0, slaveIndex, (uint8_t) (rangingCounter % 256));
-                    //     printf("Im master \r\n");
-                    // }
-                    // rangingCounter += 1;
                     /* Channel rotation */
                 #ifdef NUCLEO_L476RG
                     ANT_SW = !ANT_SW;
                 #endif
                     if ( CHANNEL_SWITCH && ( (rangingCounter + 1) % RANGINGS_PER_ROTATION == 0) )
                     {
-                        // lnaGain = (lnaGain == 13)?DEFAULT_LNA_GAIN:(lnaGain + 1); 
-                        // txPower =  6 + lnaGainValues[DEFAULT_LNA_GAIN] - lnaGainValues[lnaGain];
-                        // txPower = (txPower > 12)?7:txPower + 1;
-                        // txPower = (txPower == -18)?6:txPower - 6;
-                        // Radio.SetManualGainValue(lnaGain);
-                        // Radio.SetTxParams(txPower, RADIO_RAMP_20_US );
-                        // printf("Switching channel \r\n");
                         nextChannelIdx = (channelIdx + CHANNEL_INCREMENT) % CHANNELS;
                         setMasterAddress(0, slaveIndex, nextChannelIdx);
-                        // if (myType == MASTER_DEVICE)
-                        // {
-                        //     Radio.SetRangingCalibration(calibration);            
-                        // }
                     }
                 }
             }      
@@ -786,7 +766,6 @@ void ping()
                 acceptAllRequests();   
                 thread_sleep_for(2);
                 Radio.SetAdvancedRanging( (TickTime_t){RADIO_TICK_SIZE_1000_US, 0xFFFF});
-               // hal_sleep();                
             }
             lastEvent = NONE;
         }
@@ -798,7 +777,6 @@ void getRangingResults(bool differential)
 {
     PacketStatus_t p;
     Radio.GetPacketStatus(&p);
-    // double fei = Radio.GetFrequencyError();
     double fei = feiTable[slaveIndex];
     double rawRangingRes = Radio.GetRangingResult(RANGING_RESULT_RAW);
     int8_t rssi = p.LoRa.RssiPkt;
@@ -815,46 +793,8 @@ void getRangingResults(bool differential)
         correctedDistance = correctFei(rawRangingRes, fei);
         filters[slaveIndex]->append(correctedDistance);
         correctedDistance = filters[slaveIndex]->compute();
-
-        // rawRangingRes =  filters[slaveIndex]->compute();
-        // distanceStack.insert(rawRangingRes);
-        // correctedDistanceStack.insert(correctedDistance);
-        // rawRangingRes = distanceStack.getMean();
-        // correctedDistance = correctedDistanceStack.getMean();
     }
-    // printf("Ranging delta threshold: %d\r\n", Radio.GetRangingPowerDeltaThresholdIndicator());
-    // printf("%c%d|%d|%d.%d|%d.%d|%d|%d.%d|%d|%d|%u|%u|%d|%d|%d|%u|%llu\r\n", 
-    //         header,
-    //         masterIndex,
-    //         slaveIndex,
-    //         (int) INT(rawRangingRes), 
-    //         (int) DEC(rawRangingRes), 
-    //         (int) INT(correctedDistance),
-    //         (int) DEC(correctedDistance),
-    //         (int) INT(fei), 
-    //         (int) INT(skew),
-    //         (int) DEC(skew),
-    //         rssi, 
-    //         snr, 
-    //         calibration, 
-    //         Channels[channelIdx], 
-    //         currentSf >> 4,
-    //         getBW(currentBw),
-    //         txPower,
-    //         pLength,
-    //         rangingClock.elapsed_time().count());   
     uint8_t deltaThold = Radio.GetRangingPowerDeltaThresholdIndicator();
-    // double rssiCorrection = Sx1280RangingCorrection::GetRangingCorrectionPerSfBwGain(
-    //     currentSf,
-    //     currentBw,
-    //     Radio.GetRangingPowerDeltaThresholdIndicator());
-    // double correctedDistanceRssi = correctedDistance + rssiCorrection;
-
-    // printf("Corrected distance (FEI): %d.%d\r\n\n", (int) INT(correctedDistance), (int) DEC(correctedDistance));
-    // printf("Delta threshold: %d, Corrected distance (RSSI): %d.%d\r\n\n", (int) deltaThold, (int) INT(correctedDistanceRssi), (int) DEC(correctedDistanceRssi));
-
-
-
     printf("{\"distance\":%d.%d, \"corrected_distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"delta_rssi\":%d, \"snr\":%d, \"frequency\":%u, \"txPower\":%d, \"LNA_gain\":%u, \"phase\":%d.%d, \"phase_equivalent_distance\":%d.%d}\r\n",
             (int) INT(rawRangingRes), 
             (int) DEC(rawRangingRes), 
@@ -872,15 +812,23 @@ void getRangingResults(bool differential)
             (int) DEC(phase),   
             (int) INT(phaseDistance),
             (int) DEC(phaseDistance)
-            // currentSf >> 4,
-            // getBW(currentBw)
+
             );
     if (myType == SLAVE_DEVICE)
+    {
         nextChannelIdx = Radio.GetRangingAddress() & 0x000000FF;
+        encodedDistance = (int) ((correctedDistance * DISTANCE_RESOLUTION) / MAX_DIST);
+        printf("Slave encodeddistance %u \r\n", encodedDistance);
 
-    
-    // uint32_t address = Radio.GetRangingAddress();
-    // printf("Received address: %u, %u \r\n", (address & 0xFF00000) >> 24, address & 0x000000FF);
+        setMasterAddress(DEVICE_ID, 0, encodedDistance);
+    }   
+    else {
+        encodedDistance = (int16_t) (Radio.GetRangingAddress() & 0x0000FFFF);
+        double slaveDistance = (double) (encodedDistance * MAX_DIST) / DISTANCE_RESOLUTION;
+        printf("Slave distance %d.%d \r\n", (int) INT(slaveDistance), (int) DEC(slaveDistance));//encodedDistance * (MAX_DIST / DISTANCE_RESOLUTION));
+    }
+    // printf("Slave distance %u \r\n", encodedDistance * (MAX_DIST / DISTANCE_RESOLUTION));
+
 }
 
 

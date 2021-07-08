@@ -160,15 +160,23 @@ void SX1280::SetAdvancedRanging(TickTime_t timeout )
     AdvancedRangingOn = true;
 }
 
-uint32_t SX1280::GetAdvancedRangingAddress()
+uint32_t SX1280::GetRangingAddress()
 {
+    /* Note: the procedure documented in SX1280 datasheet does not work out-of-the-shelf.
+    The last 2 bits of 0x927 register defined whether the first 2 or last 2 bytes of the address are loaded in 0x95F and 0X960
+    0x960 can only be loaded once for some mysterious reason
+    Thus the 2 last bits of 0x927 should always be set back to 0 after reading, and we must read 0x95F and 0X960 BEFORE
+    modyfing 0x927, otherwise one byte will be lost forever */
     uint32_t RangingAddressReceived;
-    WriteRegister(0x927, (ReadRegister(0x927) & 0xFC) | 0x01);
-    RangingAddressReceived = ReadRegister(0x960);
-    RangingAddressReceived |= (ReadRegister(0x95F) << 24);
-    WriteRegister(0x927, (ReadRegister(0x927) & 0xFC) | 0x00);
-    RangingAddressReceived |= (ReadRegister(0x960) << 16);
-    RangingAddressReceived |= (ReadRegister(0x95F) << 8);
+    uint8_t reg = ReadRegister(0x927);
+    uint8_t b0, b1, b2, b3;
+    b3 = ReadRegister(0x960);
+    b2 = ReadRegister(0x95F);
+    WriteRegister(0x927, (reg & 0xFC) | 0x01);
+    b1 = ReadRegister(0x960);
+    b0 = ReadRegister(0x95F);
+    WriteRegister(0x927, (reg & 0xFC) | 0x00);
+    RangingAddressReceived =  (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
     return(RangingAddressReceived);
 }
 

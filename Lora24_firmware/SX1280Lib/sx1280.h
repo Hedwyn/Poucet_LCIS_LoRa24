@@ -1256,22 +1256,25 @@ public:
     void SetRx( TickTime_t timeout );
 
     /*!
-     * \brief While in advanced ranging mode, returns the address of the last ranging exchange heard
-     *
-     * \return ranging address used by the master in the most recent ranging exchange
-     * \author Baptiste Pestourie
-     * \date Mar 2021
-     */
-    void SetAdvancedRanging(TickTime_t timeout );
-
-    /*!
      * \brief Sets the radio in advanced ranging reception mode
      *
      * \param [in]  timeout       Structure describing the reception timeout value
      * \author Baptiste Pestourie
      * \date Feb 2021
      */
-    uint32_t GetAdvancedRangingAddress();
+    void SetAdvancedRanging(TickTime_t timeout );
+
+
+    /*!
+     * \brief Returns the address of the last ranging exchange heard. 
+     * When operating in advanced ranging mode, returns the master address.
+     * Note that the procedure implemented differs from the one documented in SX1280 datasheet.
+     * See the comment in the function for details.
+     * \return ranging address 
+     * \author Baptiste Pestourie
+     * \date Mar 2021
+     */
+    uint32_t GetRangingAddress();
 
     /*!
      * \brief Exits advanced ranging mode - Radio will stay in RX operating mode
