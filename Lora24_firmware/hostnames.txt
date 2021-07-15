@@ -1,0 +1,2 @@
+raspberrypi.local pi lcis
+poucet1 pi lcis

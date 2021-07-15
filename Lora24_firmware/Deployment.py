@@ -13,7 +13,7 @@ This program is part of the SecureLoc Project @https://github.com/Hedwyn/SecureL
  ****************************************************************************
 @file application.py
 @author Baptiste Pestourie
-@date 2018 February 1st
+@date 2020 December 1st
 @brief Deployment module - handles complation & deployment automation fore SX1280-based ranging boards
 @see https://github.com/Hedwyn/Poucet_LCIS_LoRa24 {private repo- you need permission access}
 """
@@ -26,7 +26,8 @@ import sys
 import json
 from shutil import copyfile, rmtree
 import time
-import argparse
+import argparse 
+import RemoteFlash
 
 class Os(Enum):
     WIN = 0
@@ -39,6 +40,7 @@ DEVICE_MODEL = 'NODE_L432KC'
 DEVICE_MODELS = ['L432KC', 'L476RG', 'L152RE']
 MAKE_CALL = "make all BIN="
 BIN_EXTENSION = ".bin"
+ELF_EXTENSION = ".elf"
 MASTER_BIN_PREFIX = "Master"
 SLAVE_BIN_PREFIX = "Slave"
 MAX_SLAVES_NUMBER = 10
@@ -60,8 +62,11 @@ TOOLCHAIN = "GCC_ARM"
 PROJECT_NAME = "SX1280"
 APP_CONFIG_FILE = "mbed_app.json"
 VERBOSE = True
+HOST_FILE = "hostnames.json"
+DEFAULT_ELF_NAME = "imst_firmware.elf"
 
 class ProjectConfig:
+    """Contains all the paramaters and flags required to build a given project"""
     def __init__(self, os_path, drivers_path, project_libs, profile):
         self.os_path = os_path
         self.drivers_path = drivers_path
@@ -69,6 +74,14 @@ class ProjectConfig:
         self.profile = profile
 
 def parse_build_config(build_config_path = BUILD_CONFIG_PATH):
+    """Extract the data from the configuration file.
+    Parameters
+    ----------
+    build_config_path: str
+        path to the build configuration profile.
+    Returns: ProjectConfig
+    -------
+    A ProjectConfig instance containing all the extracted data"""
     with open(build_config_path) as f:
         for line in f:
             if line != '\n':
@@ -84,6 +97,11 @@ def parse_build_config(build_config_path = BUILD_CONFIG_PATH):
         print("Could not find a proper json configuration. Check build file formatting")
 
 def call_cmd(cmd):
+    """Launches a subprocess with shell command.
+    Parameters
+    ----------
+    cmd: str    
+        The command to pass to the shell"""
     p = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr= subprocess.STDOUT, shell = True)
     for line in iter(p.stdout.readline, b''):
         # displaying the command's output in stdout. Automatic new line in Python' print is removed
@@ -106,6 +124,17 @@ def clean_drivers_build(config):
         rmtree(build_path)
 
 def build_drivers(config, clean = False, target = TARGET):
+    """Builds the drivers as static libraries for a given project. 
+    The names of the drivers are defines in the project json file.
+    Parameters
+    ----------
+    config: ProjectConfig
+        Configuration of the project to compile for
+    clean: bool
+        whether to rebuild all the source files or not
+    target: str
+        device model to compile for
+    """
     root_dir = os.path.basename(os.getcwd())
     static_lib_path = 'BUILD/libraries/' + root_dir + '/' + target + '/GCC_ARM-' + config.profile.upper() + '/' + 'libmbed-os.a'
     print(static_lib_path)
@@ -133,6 +162,21 @@ def build_drivers(config, clean = False, target = TARGET):
     call_cmd(cmd)
 
 def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean =  False):
+    """Compiles a given project with Arm-Mbed client 1. 
+    Defines several macros related to the project, the target, and the project dependencies.
+    Parameters
+    ----------
+    total_slaves: int
+        The total number of slaves that will be used on the platform.
+    config: ProjectConfig
+        An instance of a project configuration object.
+    target: str
+        Device model to compile for
+    flash: bool
+        whether the device should be flashed after compilation
+    clean: bool
+        whether to rebuild the project static libraries"""
+
     if total_slaves == 0:
         total_slaves = 1
     cmd = MBED_COMPILE + ' '
@@ -147,7 +191,6 @@ def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean 
     for lib in config.project_libs:
         cmd += " --source " + lib
     
-   
     if os.path.exists(static_libs_path):
         cmd += " --source " + static_libs_path 
     else:
@@ -167,7 +210,6 @@ def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean 
     # defining the device ID and the total number of slaves
     cmd += " -D" + DEVICE_ID_MACRO_NAME + "=" + str(id) + " -D" + TOTAL_SLAVES_MACRO_NAME + "=" + str(total_slaves)
 
-    
 
     # defining the binary name
     bin_name = "Master" if id == 0 else ("Slave" + str(id))
@@ -180,22 +222,14 @@ def compile(id, total_slaves, config, target = TARGETS[0], flash = False, clean 
     print(cmd)
     call_cmd(cmd)
 
-    # copying compiled binary to the firmware directory
+    # copying compiled binary (bin and elf) to the firmware directory
     
     copyfile("BUILD/" + target + "/" + release_name + "/" + bin_name + ".bin", FIRMWARE_DIR + "/" + bin_name + ".bin" )
-    # try:
-    #     copyfile("BUILD/" + release_name + "/" + PROJECT_NAME + ".bin", FIRMWARE_DIR + "/" + bin_name )
-    # except:
-    #     print("Could not copy binary into the firmware directory. Compilation may have failed")
-
-
-def clean_objs():
-    call_cmd("make clean_objs")
-
-def clean():
-    call_cmd("make clean")
+    copyfile("BUILD/" + target + "/" + release_name + "/" + bin_name + ".elf", FIRMWARE_DIR + "/" + bin_name + ".elf" )
 
 def gen_bin_names(total_devices = 1):
+    """Generates the bin prefixes list.
+    The first binary is defined as Master, the following ones as slave with a slave index"""
     bin_names = []
     if total_devices == 0:
         print("No binaries to generate as the total number of devices is 0")
@@ -209,6 +243,15 @@ def gen_bin_names(total_devices = 1):
           
 
 def flash_device(device_path, bin_name):
+    """Flashes a device locally or remotely.If the device is wired, the bin is copied to the device's drive.
+    If the device is remote, the elf file is sent over through psctp and openocd is calle thourgh ssh.
+    Parameters
+    ----------
+    device_path: str/tuple
+        device's drive or credentials tuple for remote devices.
+    bin_name:
+        the binary to use
+     """
     # to flash the STM32, the device must be mounted and the binary at the root of its local memory
     bin_path = FIRMWARE_DIR + "\\" + bin_name
 
@@ -224,6 +267,13 @@ def flash_device(device_path, bin_name):
         print("The drive could not be found")
 
 def flash_all_devices(devices_paths = None, bin_names = None):
+    """Flashes all the devices listed with a set of given binaries.
+    Parameters
+    ----------
+    devices_path: list[str, tuple]
+        The list of the device local path (for wired devices) or credentials tuple (for remote devices), in order.
+    bin_names:
+        The lists of binary files names, in order. Should be the same length as devices_path."""
     if not(devices_paths):
         print("Getting the paths to the devices currently connected as external drives")
         devices_paths = get_drives_win()
@@ -236,10 +286,22 @@ def flash_all_devices(devices_paths = None, bin_names = None):
         print("The number of paths provided is inferior to the number of binaries. Aborting")
     else:
         for bin_name, device_path in zip(bin_names, devices_paths):
-            flash_device(device_path, bin_name)
+            if isinstance(device_path, str):
+                flash_device(device_path, bin_name + BIN_EXTENSION)
+            else:
+                host = dict(device_path)
+                # sending the elf file
+                bin_path = FIRMWARE_DIR + "\\" + bin_name
+                RemoteFlash.send_hex_file(bin_path + ELF_EXTENSION,  host["username"] + "@" + host["hostname"], host["password"], DEFAULT_ELF_NAME, RemoteFlash.HOSTPATH)
+                RemoteFlash.local_flash(host["hostname"], host["username"], host["password"])
 
 
-def is_drive_stm32(drive, device_models = DEVICE_MODELS):
+def get_drive_model(drive, device_models = DEVICE_MODELS):
+    """Checks the STM32 model of each connected drive. 
+    Returns: str
+    -------
+    Device model or None if the model is unknown
+    """
     if (local_os != Os.WIN):
         print("The drive name can only be checked on Windows")
     else:  
@@ -260,7 +322,7 @@ def get_drives_win(device_models = DEVICE_MODELS):
         print("The drives can only be detected on Windows")
     else:
         drives = ['%s:' % d for d in string.ascii_uppercase if os.path.exists('%s:' % d)]
-        stm32_list = [drive for drive in drives if is_drive_stm32(drive, device_models)]
+        stm32_list = [drive for drive in drives if get_drive_model(drive, device_models)]
         return(stm32_list)
 
 
@@ -269,28 +331,41 @@ def associate_bins_to_drives(ordering_list = None):
     if (local_os != Os.WIN):
         print("The drives can only be detected on Windows")
         return
+    # parsing hosts
+    hostslist = RemoteFlash.check_connected_hosts(RemoteFlash.read_config())
+
     drive_to_bin_dic = {}
     if ordering_list:
-        devices_number = len(ordering_list)
-        stm32_list = [drive_letter + ":" for drive_letter in ordering_list]
+        devices_number = len(ordering_list) + len(hostslist)
+        stm32_list = [drive_letter + ":" for drive_letter in ordering_list] + hostslist
         bin_names = gen_bin_names(devices_number)    
     else:
-        stm32_list = get_drives_win()
-        devices_number = len(stm32_list)
+        stm32_list = get_drives_win() + hostslist
+        devices_number = len(stm32_list) 
         bin_names = gen_bin_names(devices_number)
 
     for bin_name, stm32 in zip(bin_names, stm32_list):
-        target = is_drive_stm32(stm32)
+        if isinstance(stm32, str):
+            target = get_drive_model(stm32)
+            key = stm32
+        else:
+            # remote targets are always IMST282A
+            target = "IMST282A"
+            key = tuple(sorted(stm32.items()))
         print(target)
-        drive_to_bin_dic[stm32] = bin_name, target
+        drive_to_bin_dic[key] = bin_name, target
     return(drive_to_bin_dic)
 
 def deploy(project_conf, ordering_list = None, total_slaves = None, clean_drivers = False):
+    # parsing USB drives
     drive_to_bin_dic = associate_bins_to_drives(ordering_list)
     devices_path = [drive for drive in drive_to_bin_dic]
-    bin_names = [drive_to_bin_dic[drive][0] + BIN_EXTENSION for drive in drive_to_bin_dic]
+    bin_names = [drive_to_bin_dic[drive][0] for drive in drive_to_bin_dic]
+
+    # parsing hosts
+    
     targets = [drive_to_bin_dic[drive][1] for drive in drive_to_bin_dic]
-    total_devices = len(devices_path)
+    total_devices = len(targets)
 
     if clean_drivers:
         clean_drivers_build(project_conf)
@@ -302,6 +377,7 @@ def deploy(project_conf, ordering_list = None, total_slaves = None, clean_driver
     # flashing them all
     flash_all_devices(devices_path, bin_names)
 
+
 def n_compile(project_conf, n, targets = None, total_slaves = None):
     if not total_slaves:
         # substracting master (id 0) from the slaves count
@@ -311,6 +387,13 @@ def n_compile(project_conf, n, targets = None, total_slaves = None):
             compile(i, total_slaves, project_conf, target = targets[i])
         else:
             compile(i, total_slaves, project_conf)
+
+def parse_remote_hosts():
+    with open(HOST_FILE) as f:
+        hosts = json.loads(f)
+        for hostname in hosts:
+            pwd = hosts[hostname]
+            
 
 def st_link_flash(conf_path, id = 0, total_slaves = 0, target = 'IMST282A'):
     conf = parse_build_config(conf_path)

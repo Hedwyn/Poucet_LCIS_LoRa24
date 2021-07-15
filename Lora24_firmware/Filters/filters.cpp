@@ -309,7 +309,7 @@ template<size_t N> void MovingMedian<N>::append(double value)
 
 }
 
-#ifdef RUN_TESTS_FILTERS
+#ifdef RUN_TESTS
 int main()
 {
     /** Test parameters */

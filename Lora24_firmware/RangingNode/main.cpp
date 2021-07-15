@@ -3,11 +3,11 @@
 #include "mbed.h"
 #include "SX1280.h"
 #include "SX1280-hal.h"
+#include "hal/trng_api.h"
 #include "RangingCorrection.h"
 #include <math.h>
 #include "chrono"
 #include "FreqLUT.h"
-#include "filters.h"
 
 
 /** 
@@ -25,7 +25,7 @@
 #define DEC(_FLOAT) (FLOAT_EXPONENT * fabs(_FLOAT - INT(_FLOAT)) )
 
 #define INTER_RANGING_DELAY 30     /**<Master sleep time in-between each ranging*/
-#define CHANNEL_SWITCH 1           /**<If enabled, the transceiver will switch channels after a given number of rangings*/
+#define CHANNEL_SWITCH 4           /**<If enabled, the transceiver will switch channels after a given number of rangings*/
 #define RANGINGS_PER_ROTATION 10    /**<Number of ranging protocols held before switching channels. Does nothing if channel rotation is off*/
 #define MAX_TIMEOUTS 10              /**<After that number of timeouts the transceiver will go back to default parameters*/
 #define CHANNEL_INCREMENT 1         /**<Value by which the channel index is incremented at each channel rotation. If superior to 1, some channels will be skipped */
@@ -34,7 +34,7 @@
 #define BOTTOM_FREQUENCY 2400000000 /**<Center frequency of the lowest channel available for LoRa 2.4 GHz */
 #define SYMBOL_LENGTH_SF5 197       /**<Symbol length for SF5 in microseconds. Increasing SF by 1 doubles that length */
 // #define SPEED_OF_LIGHT 3E8          /**<Speed of light in m/s*/
-#define ENABLE_FILTERING 0 
+#define ENABLE_FILTERING 1 
 #define SINGLE_SLAVE_MODE   1         /**<If enabled, only one slave is defined. Node IDs above 1 will be started as passive slaves performing differential ranging */
 #define DEFAULT_TX_POWER 6 /**<Default Tx power, in Dbm */
 #define DEFAULT_LNA_GAIN 8
@@ -61,7 +61,51 @@
     #define DEVICE_ID 0
 #endif 
 
+const int STACK_LENGTH = 4;
+struct Stack
+{
+    double values[STACK_LENGTH];
+    int start_index = 0;
+    int end_index = 0;
+};
 
+void stack(Stack *stack, double value)
+{
+    stack->values[stack->start_index] = value;
+    stack->start_index = (stack->start_index + 1) % STACK_LENGTH;
+}
+
+double getMedian(Stack *stack)
+{
+    double min = stack->values[0];
+    double max = stack->values[0];
+    double sum = 0;
+    for (int i = 1; i < STACK_LENGTH; i++)
+    {
+        if (stack->values[i] < min)
+        {
+            min = stack->values[i];
+        }
+        if (stack->values[i] > max)
+        {
+            max = stack->values[i];
+        }
+        sum += stack->values[i];
+    }
+    /* works only for 4 elements */
+    return( (sum - min - max) / 2);
+}
+
+double getVariance(Stack *stack, double *median)
+{
+    double sum = 0;
+    *median = getMedian(stack);
+    for (int i = 0; i < STACK_LENGTH; i++)
+    {
+        sum += pow(stack->values[i] - *median, 2);
+    }
+    return(sum / STACK_LENGTH);
+}
 
 /** Physical layers default paramaters */
 const int8_t defaultTxPower = 10;
@@ -95,61 +139,10 @@ const double   RNG_FGRAD_1600[] = { 0.103,  -0.041, -0.101, -0.211, -0.424, -0.8
 
 uint16_t calibration;
 double feiTable[TOTAL_DEVICES] = {};
-MovingMedian<20> *filters[TOTAL_DEVICES];
 
-class Stack
-{
-private:
-    double accumulator[ACCUMULATOR_LENGTH];
-    int index;
-    bool full;
-public:
-    Stack() 
-    {
-        index = 0;
-        full = false;
-        for (int i =0; i < ACCUMULATOR_LENGTH; i++)
-        {
-            accumulator[i] = 0;
-        }
-    }
-    void insert(double element)
-    {
-        accumulator[index] = element;
-        index++;
-        if (index == ACCUMULATOR_LENGTH)
-        {
-            full = true;
-            index = 0;
-        }
-    }
-    int getDepth()
-    {
-        int depth;
-        if (full)
-        {
-            depth = ACCUMULATOR_LENGTH;
-        }
-        else
-        {
-            depth = index;
-        }
-        return(depth);
-    }   
+Stack channelMes[TOTAL_DEVICES][CHANNELS];
 
-    double getMean()
-    {
-        double sum = 0;
-        int depth = getDepth();
-        for (int i = 0; i < getDepth(); i++)
-        {
-            sum += accumulator[i];
-        }
-        return(sum / depth);
-    }
-};
-Stack distanceStack = Stack();
-Stack correctedDistanceStack = Stack();
+
 
 /** function prototypes */
 bool setPreambleLength(PacketParams_t params, int length);
@@ -182,6 +175,19 @@ int rangingCounter = 0;
 int8_t txPower = DEFAULT_TX_POWER;
 int8_t lnaGain = DEFAULT_LNA_GAIN;
 int lnaGainValues[] = {0, 0, 6, 12, 18, 24, 30, 36, 42, 46, 48, 50, 52, 54};
+const int FRAME_BUFFER_LEN = 40;
+struct frameData
+{
+    double distance;
+    int rssi;
+    int snr;
+};
+frameData frames[FRAME_BUFFER_LEN];
+const int SNR_THRESHOLD[] = {5, 5, 2, 0, -5, -7, -10};
+// // SF5 SF6 SF7 SF8 SF9 SF10
+// {{5, 5, 2, 0, -5, -7, -10}, //BW500
+//  {5, 5, 2, 0, -5, -7, -10},//BW800
+//  {5, 5, 2, 0, -5, -7, -10}}; //BW1600
 
 enum DeviceType{
     MASTER_DEVICE,
@@ -189,6 +195,7 @@ enum DeviceType{
     PASSIVE_SLAVE_DEVICE
 };
 DeviceType myType, role;
+
 
 
 
@@ -282,6 +289,24 @@ void dumpRssiCalibration()
     exit(0);
 }
 #endif
+
+void selectChannel()
+{
+    bool coinFlip = ((float) rand() / RAND_MAX) > 0.5;
+    if (coinFlip)
+    {
+        
+    }
+    // int sfIdx = (currentSf << 4) - 5;
+    // for (int i = 0; i < FRAME_BUFFER_LEN; i++)
+    // {
+    //     /* checking if SNR is satisfying */
+    //     if (frames[i].snr > SNR_THRESHOLD[sfIdx] )
+    //     {
+            
+    //     }
+    // }
+}
 
 double correctLnaGain(double distance, int lnaGain)
 {
@@ -654,6 +679,8 @@ void setIRQs() {
     }
 }
 
+
+
 void setChannel(int channel) 
 {
     if (ORDER_CHANNELS)
@@ -790,9 +817,9 @@ void getRangingResults(bool differential)
 
     if (ENABLE_FILTERING)
     {
-        correctedDistance = correctFei(rawRangingRes, fei);
-        filters[slaveIndex]->append(correctedDistance);
-        correctedDistance = filters[slaveIndex]->compute();
+        stack(&channelMes[slaveIndex][channelIdx], correctedDistance);
+        double median = getMedian(&channelMes[slaveIndex][channelIdx]);
+        printf("Channel %d measured distance %d.%d\r\n", channelIdx, (int) INT(median), (int) DEC(median));
     }
     uint8_t deltaThold = Radio.GetRangingPowerDeltaThresholdIndicator();
     printf("{\"distance\":%d.%d, \"corrected_distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"delta_rssi\":%d, \"snr\":%d, \"frequency\":%u, \"txPower\":%d, \"LNA_gain\":%u, \"phase\":%d.%d, \"phase_equivalent_distance\":%d.%d}\r\n",
