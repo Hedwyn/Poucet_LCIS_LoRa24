@@ -65,6 +65,9 @@ VERBOSE = True
 HOST_FILE = "hostnames.json"
 DEFAULT_ELF_NAME = "imst_firmware.elf"
 
+# globals 
+hostslist = []
+
 class ProjectConfig:
     """Contains all the paramaters and flags required to build a given project"""
     def __init__(self, os_path, drivers_path, project_libs, profile):
@@ -328,6 +331,7 @@ def get_drives_win(device_models = DEVICE_MODELS):
 
 
 def associate_bins_to_drives(ordering_list = None):
+    global hostslist
     if (local_os != Os.WIN):
         print("The drives can only be detected on Windows")
         return
@@ -424,40 +428,14 @@ if __name__ == "__main__":
             n_compile(config, args.build, targets)
         else:
             deploy(config)
+            # if there are some connected hosts, starting clients
+            RemoteFlash.start_remote_clients(hostslist)
+
+            
     else:
         print("No argument given. You should pass a project description json file as argument. Quitting")
         parser.print_help()
 
-    # argc = len(sys.argv)
-
-    # # default arguments 
-    # total_slaves = None
-    # build_config_path = BUILD_CONFIG_PATH
-    # clean = False
-
-    # for idx, argv in enumerate(sys.argv[1:]):
-    #     if argv[0] == "-":
-    #         # flag detected
-    #         if argv[1:] == "build":
-    #             build_config_path = sys.argv[idx + 2]
-
-    #         if argv[1:] == "rebuild":
-    #             build_config_path = sys.argv[idx + 2]
-    #             clean = True
-            
-    #         if argv[1:] == "stlink":
-    #             build_config_path = sys.argv[idx + 2]
-    #             st_link_flash(build_config_path)
-    #             sys.exit()
-
-
-    #         elif argv[1:] == "total_slaves":
-    #             try:
-    #                 total_slaves = int(argv[idx + 2])
-    #             except:
-    #                 print("Please provided an integer value for the total number of slaves")
-         
-    # deploy(build_config_path = build_config_path, total_slaves =  total_slaves, clean_drivers = clean)
 
 
 

@@ -33,6 +33,7 @@ import time
 from pythonping import ping
 # from Make import *
 
+MY_IP = '169.254.152.228'
 SHELL_ON = True
 BOOTLOADER = "teensy_loader_cli"
 HOSTS_LIST = ['Rasp1','Rasp2','Rasp3','Rasp4']
@@ -180,6 +181,30 @@ def local_flash(hostname,username,password):
 			print(output)
 			print("\n /!\ Device flash failed ! /!\ \n")
 
+def start_remote_clients(hostslist):
+	for host in hostslist:
+		with paramiko.SSHClient() as ssh:
+			ssh.load_system_host_keys()
+			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			ssh.connect(host["hostname"],port =22, username = host["username"], password = host["password"])	
+			transport = ssh.get_transport()
+			channel = transport.open_session()
+			channel.exec_command('nohup sudo pkill python')
+			channel.recv_exit_status()
+			channel = transport.open_session()
+			channel.exec_command('nohup python3 /home/pi/client.py 169.254.159.156 > /dev/null 2>&1')# + ' > /dev/null 2>&1')
+
+def stop_remote_clients(hostslist):
+	for host in hostslist:
+		with paramiko.SSHClient() as ssh:
+			ssh.load_system_host_keys()
+			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			ssh.connect(host["hostname"],port =22, username = host["username"], password = host["password"])	
+			transport = ssh.get_transport()
+			channel = transport.open_session()
+			channel.exec_command('nohup sudo pkill python')
+			channel.recv_exit_status()
+
 def local_clean(hostname,username,password):
 	"""triggers anchor flashing on the given rasp host"""
 	#starting ssh client
@@ -202,11 +227,13 @@ def local_clean(hostname,username,password):
 	stdout.channel.recv_exit_status()
 	ssh.close()
 
+		
 
 if __name__ == "__main__":
 	# send_hex_file('BUILD/IMST282A/GCC_ARM-RELEASE/Master.elf', 'pi@raspberrypi.local', 'lcis', 'Master.elf', HOSTPATH)
 	# send_hex_file('openocd.cfg', 'pi@raspberrypi.local', 'lcis', 'openocd.cfg', HOSTPATH)
-	# send_hex_file('../PiZeroBridge/readUart.py', 'pi@raspberrypi.local', 'lcis', 'readUart.py', HOSTPATH)
+	# send_hex_file('../Bridge/bridge_pizero_imst.py', 'pi@raspberrypi.local', 'lcis', 'client.py', HOSTPATH)
 	# local_flash('raspberrypi.local', 'pi', 'lcis')
-	hosts= read_config()
-	print(check_connected_hosts(hosts))
+	# hosts= read_config()
+	# print(check_connected_hosts(hosts))
+	stop_remote_clients(check_connected_hosts(read_config()))

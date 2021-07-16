@@ -36,8 +36,8 @@
 // #define SPEED_OF_LIGHT 3E8          /**<Speed of light in m/s*/
 #define ENABLE_FILTERING 1 
 #define SINGLE_SLAVE_MODE   1         /**<If enabled, only one slave is defined. Node IDs above 1 will be started as passive slaves performing differential ranging */
-#define DEFAULT_TX_POWER 6 /**<Default Tx power, in Dbm */
-#define DEFAULT_LNA_GAIN 8
+#define DEFAULT_TX_POWER 13 /**<Default Tx power, in Dbm */
+#define DEFAULT_LNA_GAIN 11
 #define ADDRESS_NUMBER_OF_BITS_REGISTER 0x931
 #define MOVING_MEDIAN_LENGTH 20
 // #define WAIT_INPUT
@@ -62,6 +62,24 @@
 #endif 
 
 const int STACK_LENGTH = 4;
+
+struct RangingFrame
+{
+    double distance;            /* raw distance computed by the SX1280 */
+    double correctedDistance;   /* distance after correction of fei and LNA gain */
+    double filteredDistance;    /* distance after applying filter chain */
+    int fei;                    /* carrier frequency offset */
+    int rssi;                   /* reception power */
+    int rangingRssi;            /* ranging rssi indicator - highly correlated to rssi but with an offset- not very useful */
+    int snr;                    /* signal to noise ratio */
+    unsigned int frequency;     /* center frequency of the current channel */
+    int sf;                     /* spreading factor */
+    int bw;                     /* bandwidth */
+    int lnaGain;                /* gain level of the LNA - check documentation to get the dB equivalent */
+    int txPower;                /* tranmsmission power used for the last frame */
+    int calibration;            /* compensation value for the internal signal path delay */
+};
+
 struct Stack
 {
     double values[STACK_LENGTH];
@@ -142,7 +160,9 @@ double feiTable[TOTAL_DEVICES] = {};
 
 Stack channelMes[TOTAL_DEVICES][CHANNELS];
 
-
+/* ranging frames */
+RangingFrame currentFrame;
+RangingFrame prevFrame;
 
 /** function prototypes */
 bool setPreambleLength(PacketParams_t params, int length);
@@ -166,7 +186,7 @@ int getSlaveIndex();
 int getBW(RadioLoRaBandwidths_t bw);
 void acceptAllRequests();
 
-const int WATCHDOG_TIMEOUT = 1000000; // us
+const int WATCHDOG_TIMEOUT = 500000; // us
 Timer rangingClock;
 Timer sysClock;
 Timer watchdog;
@@ -289,6 +309,29 @@ void dumpRssiCalibration()
     exit(0);
 }
 #endif
+
+void printRangingFrame(RangingFrame *frame)
+{
+    printf("{\"id\":\"poucet%d\", \"distance\":%d.%d, \"corrected_distance\":%d.%d, \"filtered_distance\":%d.%d, \"fei\":%d, \"rssi\":%d, \"delta_rssi\":%d, \"snr\":%d, \"frequency\":%u, \"txPower\":%d, \"LNA_gain\":%u, \"sf\":%d, \"bw\":%d}\r\n",
+        DEVICE_ID,
+        (int) INT(frame->distance), 
+        (int) DEC(frame->distance), 
+        (int) INT(frame->correctedDistance),
+        (int) DEC(frame->correctedDistance),
+        (int) INT(frame->filteredDistance),
+        (int) DEC(frame->filteredDistance),
+        (int) INT(frame->fei), 
+        frame->rssi, 
+        frame->rangingRssi,
+        frame->snr,
+        frame->frequency,
+        frame->txPower,
+        frame->lnaGain,
+        frame->calibration,
+        currentSf,
+        currentBw
+        );
+}
 
 void selectChannel()
 {
@@ -603,7 +646,7 @@ void setMasterAddress(int masterIdx, int slaveIdx, uint16_t additionalData)
     buf[3] = RANGING_ADDR[slaveIdx];
     buf[1] = (uint8_t) (additionalData & 0xFF00) >> 8;
     buf[0] = (uint8_t) additionalData & 0x00FF;
-    printf("Programmed adress: %02x%02x%02x%02x\r\n", buf[0], buf[1], buf[2], buf[3]);
+    debug_print("Programmed adress: %02x%02x%02x%02x\r\n", buf[0], buf[1], buf[2], buf[3]);
     Radio.WriteRegister(REG_LR_REQUESTRANGINGADDR, buf, 4);
     masterIndex = masterIdx;
     slaveIndex = slaveIdx;
@@ -693,7 +736,7 @@ void setChannel(int channel)
         channelFreq = Channels[channel];
         Radio.SetRfFrequency(channelFreq);
     }
-    printf("Switching to channel %u\r\n", channelFreq);
+    verbose_print("Switching to channel %u\r\n", channelFreq);
 }
 
 void ping()
@@ -715,6 +758,8 @@ void ping()
             watchdog.reset();
             // compensating for the missed ranging
             rangingCounter++;
+            // forcing to restart
+            successiveTimeouts = MAX_TIMEOUTS;
         }
         thread_sleep_for(1);
         // printf("Watchdog time %llu\r\n", watchdog.elapsed_time().count() );
@@ -729,6 +774,7 @@ void ping()
                 if (successiveTimeouts > MAX_TIMEOUTS)
                 {
                     /* restarting whole process */
+                    printf("Restarting protocol\r\n");
                     channelIdx = 0;
                     Radio.SetRfFrequency(Channels[channelIdx]);
                     txPower = DEFAULT_TX_POWER;
@@ -804,58 +850,47 @@ void getRangingResults(bool differential)
 {
     PacketStatus_t p;
     Radio.GetPacketStatus(&p);
-    double fei = feiTable[slaveIndex];
-    double rawRangingRes = Radio.GetRangingResult(RANGING_RESULT_RAW);
-    int8_t rssi = p.LoRa.RssiPkt;
-    int8_t snr = p.LoRa.SnrPkt;
-    char header = differential?'^':'*';
-    double skew = convertFeiToPpm(fei);
-    double correctedDistance = correctFei(rawRangingRes, fei);
+    currentFrame.fei = feiTable[slaveIndex];
+    currentFrame.distance = Radio.GetRangingResult(RANGING_RESULT_RAW);
+    currentFrame.rssi = p.LoRa.RssiPkt;
+    currentFrame.snr= p.LoRa.SnrPkt;
+    currentFrame.rangingRssi = Radio.GetRangingPowerDeltaThresholdIndicator();
+    currentFrame.txPower = txPower;
+    currentFrame.lnaGain = lnaGain;
+    currentFrame.calibration = calibration;
+    currentFrame.frequency = channelFreq;
+    double correctedDistance = correctFei(currentFrame.distance, currentFrame.fei );
     correctedDistance = correctLnaGain(correctedDistance, lnaGain);
-    double phase, phaseDistance;
-    phase = computeChannelPhase(rawRangingRes, Channels[channelIdx], &phaseDistance);
+    currentFrame.correctedDistance = correctedDistance;
 
     if (ENABLE_FILTERING)
     {
         stack(&channelMes[slaveIndex][channelIdx], correctedDistance);
-        double median = getMedian(&channelMes[slaveIndex][channelIdx]);
-        printf("Channel %d measured distance %d.%d\r\n", channelIdx, (int) INT(median), (int) DEC(median));
+        if (rangingCounter % RANGINGS_PER_ROTATION == 0)
+        {
+            double median = getMedian(&channelMes[slaveIndex][channelIdx]);
+            verbose_print("Channel %d measured distance %d.%d\r\n", channelIdx, (int) INT(median), (int) DEC(median));
+            currentFrame.filteredDistance = median;
+        }
     }
-    uint8_t deltaThold = Radio.GetRangingPowerDeltaThresholdIndicator();
-    printf("{\"distance\":%d.%d, \"corrected_distance\":%d.%d,\"fei\":%d, \"rssi\":%d, \"delta_rssi\":%d, \"snr\":%d, \"frequency\":%u, \"txPower\":%d, \"LNA_gain\":%u, \"phase\":%d.%d, \"phase_equivalent_distance\":%d.%d}\r\n",
-            (int) INT(rawRangingRes), 
-            (int) DEC(rawRangingRes), 
-            (int) INT(correctedDistance),
-            (int) DEC(correctedDistance),
-            (int) INT(fei), 
-            rssi, 
-            deltaThold,
-            snr,
-            // calibration, 
-            channelFreq,
-            txPower,
-            lnaGain,
-            (int) INT(phase),
-            (int) DEC(phase),   
-            (int) INT(phaseDistance),
-            (int) DEC(phaseDistance)
-
-            );
+    
     if (myType == SLAVE_DEVICE)
     {
+        /* checking which channel to switch to next */
         nextChannelIdx = Radio.GetRangingAddress() & 0x000000FF;
         encodedDistance = (int) ((correctedDistance * DISTANCE_RESOLUTION) / MAX_DIST);
-        printf("Slave encodeddistance %u \r\n", encodedDistance);
-
+        debug_print("Slave encoded distance %u \r\n", encodedDistance);
         setMasterAddress(DEVICE_ID, 0, encodedDistance);
     }   
     else {
+        /* checking distance replied by the slave */
         encodedDistance = (int16_t) (Radio.GetRangingAddress() & 0x0000FFFF);
         double slaveDistance = (double) (encodedDistance * MAX_DIST) / DISTANCE_RESOLUTION;
-        printf("Slave distance %d.%d \r\n", (int) INT(slaveDistance), (int) DEC(slaveDistance));//encodedDistance * (MAX_DIST / DISTANCE_RESOLUTION));
+        prevFrame.correctedDistance = (prevFrame.correctedDistance + slaveDistance) / 2 ;
+        // printf("Slave distance %d.%d \r\n", (int) INT(slaveDistance), (int) DEC(slaveDistance));//encodedDistance * (MAX_DIST / DISTANCE_RESOLUTION));
     }
-    // printf("Slave distance %u \r\n", encodedDistance * (MAX_DIST / DISTANCE_RESOLUTION));
-
+    if (rangingCounter > 0) printRangingFrame(&prevFrame);
+    prevFrame = currentFrame;
 }
 
 
